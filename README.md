@@ -77,3 +77,43 @@ regression is visible here before it reaches any content repo.
 second react-flow store) inside this package. The content repo pins the engine itself and must get
 exactly one copy — and a wide peer range (`>=0.5.0 <1.0.0`) means an engine minor does not force a
 republish of this package.
+
+## The toolchain
+
+The capture / record / publish scripts ship with this package too — they were byte-identical in all
+seven repos and they drive the route contract above, so they version with the shell that defines it.
+They are `bin` entries, wired through each repo's `npm run`:
+
+| command | what it does |
+|---|---|
+| `npm run record` | one course → a 3840×2160 MP4 |
+| `npm run record:reels` | one course → portrait reels |
+| `npm run shots:4k` | one PNG per section, no ffmpeg |
+| `npm run thumb` | a branded YouTube thumbnail |
+| `npm run gen:desc` | video descriptions + chapters |
+| `npm run gen:audio` | the narration manifest |
+
+**Where things live.** Scripts resolve two roots explicitly (`scripts/_paths.mjs`), because from
+`node_modules` they can no longer use their own directory:
+
+- `repoDir` = `process.cwd()` — the content repo. `npm run` sets cwd to the package root.
+- `dataDir` = `repoDir/scripts` — the repo's script data (`concept.json`, `titles.json`,
+  `audio-manifest.json`) **and every output** (`out/`, `segments/`, `.tmp/`), at exactly the paths
+  they used before the extraction, so existing `.gitignore` entries still hold.
+- `pkgDir` — machinery that ships here (`thumb-template.html`).
+
+**Peer resolution.** `puppeteer` and `esbuild` are optional peers, loaded via `loadPeer()` which
+resolves them **from the repo**, not from this package. A bare `import('puppeteer')` resolves by
+walking up from the importing file, which under a local `file:` install lands in `ui-shell/` and
+never reaches the repo's `node_modules`.
+
+**`scripts/concept.json`** is the per-repo publishing identity — the values that used to be
+hardcoded defaults in each repo's copy, which is precisely why they drifted:
+
+```json
+{ "concept": "Apache Spark", "kicker": "SPARK", "site": "https://graphl.in",
+  "appPath": "/apache-spark", "hashtags": "#ApacheSpark …", "panelBg": "radial-gradient(…)" }
+```
+
+`concept` is the name used in descriptions; `kicker` is the thumbnail panel's label and defaults to
+`concept` — they differ only where a long name will not fit the panel (apache-spark).

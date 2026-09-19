@@ -39,3 +39,26 @@ vary run to run), so a diff only means something when compared against a same-bu
 
 This package owns no scenes and no courses. `getScene` and `courses` are injected. `Section` and
 `Course` live here because the shell renders them, and every repo's copy was byte-identical.
+
+## The scripts
+
+They live here because they drive the route contract this package defines — see README for the
+roots (`repoDir` / `dataDir` / `pkgDir`), `loadPeer`, and `concept.json`.
+
+Three traps, all found the hard way during the extraction:
+
+- **Never use `import.meta.url` to find anything but package-owned files.** From `node_modules`
+  that points at the package. Outputs and repo data go through `repoDir` / `dataDir`.
+- **Never `import` a peer by bare specifier.** Use `loadPeer`. `esbuild` "worked" for a while only
+  because this package's own vite install happened to provide it — that would have failed the
+  moment the package was consumed from the registry rather than a sibling checkout.
+- **Two scripts, two names.** `gen-descriptions` and `thumb` had *separate* copies of the concept
+  name, and apache-spark's had drifted apart on purpose ("Apache Spark" vs "SPARK"). Collapsing
+  per-repo constants into one config is where an extraction silently rebrands things — diff the
+  real output against the pre-extraction script before believing it.
+
+## Verifying a script change
+
+Run the pre-extraction script from git (`git show HEAD:scripts/<x>.mjs`) and the new one, and diff
+the outputs. `gen:desc` is the cheap one — no browser, and it exercises the content registry, the
+config and the path roots at once.

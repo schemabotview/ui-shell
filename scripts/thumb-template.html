@@ -1,0 +1,52 @@
+<!-- thumb-template.html — the branded thumbnail layout, filled by thumb.mjs.
+     Left = the course scene (screenshot of the .scene-area, no slide); right = an HTML/CSS panel
+     driven by the concept + course (kicker + title) with the GraphL wordmark (+ optional logo mark).
+     Sizes are in vw/vh so the layout is resolution-independent: thumb.mjs injects this into the app's
+     own 4K viewport (fonts inherited), screenshots it, then downscales to 1280×720.
+     thumb.mjs substitutes the double-brace tokens below (SCENE, KICKER, NUMBER, TITLE, LOGO, PANEL_BG). -->
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #1e2127; }
+  .thumb {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #1e2127;               /* letterbox surround (Zed-slate theme) */
+    font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  }
+  /* LEFT — the course scene, as it renders. cover + left anchor lets the diagram bleed off the
+     left edge (poster look) while filling the panel. */
+  .thumb__scene { flex: 0 0 58%; height: 100%; position: relative; background: #1e2127; }
+  .thumb__scene img { width: 100%; height: 100%; object-fit: cover; object-position: left center; display: block; }
+  /* A soft seam so the scene reads as continuing under the panel rather than a hard cut. */
+  .thumb__scene::after {
+    content: ''; position: absolute; top: 0; right: 0; width: 8%; height: 100%;
+    background: linear-gradient(90deg, rgba(30,33,39,0), rgba(30,33,39,0.55));
+  }
+  /* RIGHT — the branded panel. Gradient is substituted ({{PANEL_BG}}) so a course can override it. */
+  .thumb__panel {
+    flex: 1; position: relative; display: flex; flex-direction: column;
+    padding: 6.4vh 3.8vw;
+    color: #fff;
+    background: {{PANEL_BG}};
+  }
+  .thumb__kicker {
+    font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    text-transform: uppercase; letter-spacing: 0.26em; font-weight: 500;
+    font-size: 3.5vh; color: rgba(255, 255, 255, 0.94);
+  }
+  .thumb__titlewrap { margin-top: auto; margin-bottom: auto; }
+  .thumb__number { font-weight: 700; font-size: 14vh; line-height: 0.98; letter-spacing: -0.01em; }
+  .thumb__title  { font-weight: 700; font-size: 9.4vh; line-height: 1.03; letter-spacing: -0.025em; margin-top: 0.6vh; }
+  .thumb__foot { display: flex; align-items: center; gap: 1.5vh; }
+  .thumb__logo { width: 5vh; height: 5vh; border-radius: 1.1vh; display: block; }
+  .thumb__brand { font-weight: 700; font-size: 3.1vh; letter-spacing: -0.01em; }
+</style>
+<div class="thumb">
+  <div class="thumb__scene"><img src="{{SCENE}}" alt=""></div>
+  <div class="thumb__panel">
+    <div class="thumb__kicker">{{KICKER}}</div>
+    <div class="thumb__titlewrap">{{NUMBER}}<div class="thumb__title">{{TITLE}}</div></div>
+    <div class="thumb__foot">{{LOGO}}<div class="thumb__brand">GraphL</div></div>
+  </div>
+</div>
