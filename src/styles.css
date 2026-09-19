@@ -1,0 +1,593 @@
+/* @graphlearning/shell — the concept-app stylesheet.
+ *
+ * Import ONCE in a content repo's main.tsx, and import it BEFORE the repo's own theme.css:
+ *   import '@graphlearning/flow/styles.css'   // engine: react-flow + the IBM Plex faces
+ *   import '@graphlearning/shell/styles.css'  // this file: the shell's layout + surface
+ *   import './theme.css'                      // the repo: --brand / --brand-hover / --accent-2
+ *
+ * THE SHELL PAINTS THE CANVAS. ui-flow's SceneView draws its dots at #2a2f38 and assumes a dark
+ * surface behind it; that surface (--bg) is defined here. This is the contract each content repo
+ * used to re-declare by hand in its own index.css.
+ */
+
+:root {
+  --bg: #1a1d23; /* Zed-slate (matches graphl-studio/aws) */
+  --fg: #eceef2;
+  /* --- the three tokens a CONTENT REPO owns -------------------------------------------------
+     These are NEUTRAL DEFAULTS. Each repo overrides them in its own theme.css, imported AFTER
+     this stylesheet so the cascade lets the repo win. They are the entire per-repo design
+     surface — everything else in this file is identical for every concept.
+       --brand        the one accent: section eyebrow, slide title (h2), catalog accent, brand hover
+       --brand-hover  a lighter tint of --brand, for the eyebrow's hover state
+       --accent-2     a counter tone to --brand, for the slide's `###` subheading
+     Defaults rather than nothing: a repo that forgets theme.css renders in slate and is obviously
+     unbranded, instead of painting invalid colours and losing the text entirely. */
+  --brand: #8b909c;
+  --brand-hover: #a8adb8;
+  --accent-2: #c8cdd6;
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The stage fills the viewport; at capture time the viewport is the target frame (4K landscape or
+   1080×1920 portrait), so the composition fills it exactly. */
+.stage {
+  width: 100vw;
+  height: 100vh;
+}
+
+.stage--missing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  opacity: 0.7;
+}
+
+/* react-flow theming to sit on the dark stage */
+.react-flow {
+  background: var(--bg);
+}
+
+/* --- Section layout (scene + fixed-right slide surface) -------------------- */
+/* The slide is a full-height surface LIFTED off the scene canvas (figure-ground), fixed right.
+   Base = PORTRAIT (mobile → reel): scene fills the frame; slide is an off-canvas right drawer. */
+.stage--section {
+  position: relative;
+  overflow: hidden;
+}
+.scene-area {
+  position: absolute;
+  inset: 0;
+}
+.slide-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 100%; /* portrait: full-screen reading surface (landscape overrides to a 42% column) */
+  display: flex;
+  align-items: safe center;
+  justify-content: center;
+  overflow: auto;
+  box-sizing: border-box;
+  background: #2f333d; /* lifted slide surface, off the #1a1d23 scene canvas */
+  border-left: 1px solid rgba(255, 255, 255, 0.09);
+  transform: translateX(100%);
+  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10;
+}
+.slide-panel--open {
+  transform: translateX(0);
+}
+.slide-toggle {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 11;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(26, 29, 35, 0.9);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) {
+  .slide-toggle:hover {
+    color: var(--idx-accent);
+    border-color: var(--idx-accent);
+  }
+}
+.slide-toggle:focus:not(:focus-visible) {
+  outline: none;
+}
+.slide-toggle:focus-visible {
+  outline: 2px solid var(--idx-accent);
+  outline-offset: 2px;
+}
+
+/* Footer control bar (interactive only). Raised above the portrait drawer so Home + narration + nav
+   stay usable while the slide is open. Compound selector (.reel-foot.reel-foot--controls, 0,2,0) so it
+   outranks the base .reel-foot rule (z-index 8 / align baseline), which is defined LATER in the file —
+   at equal specificity that base would win here. */
+.reel-foot.reel-foot--controls {
+  z-index: 12;
+  align-items: center;
+}
+.reel-foot__grp,
+.reel-foot__nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.reel-foot__ctrl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(26, 29, 35, 0.9);
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  pointer-events: auto; /* the footer container is pointer-events:none; re-enable the buttons */
+  transition: color 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent; /* no grey/blue tap flash on mobile */
+}
+/* Hover feedback only on real-pointer devices — on touch, :hover "sticks" after a tap and leaves the
+   icon highlighted until you tap elsewhere. */
+@media (hover: hover) {
+  .reel-foot__ctrl:hover {
+    color: var(--idx-accent);
+    border-color: var(--idx-accent);
+  }
+}
+/* Drop the focus ring on click/tap; keep a keyboard-only ring for accessibility. */
+.reel-foot__ctrl:focus:not(:focus-visible) {
+  outline: none;
+}
+.reel-foot__ctrl:focus-visible {
+  outline: 2px solid var(--idx-accent);
+  outline-offset: 2px;
+}
+.reel-foot__count--live {
+  pointer-events: none;
+  min-width: 3.5em;
+  text-align: center;
+}
+
+/* GraphL wordmark — top-left of the bare SCENE view; click or Esc → back to catalog. (The section
+   view brands via its own header/footer, whose eyebrow is the home link.)
+   Fixed to the viewport so it sits above the stage regardless of layout; hidden under ?capture=1. */
+.brand-home {
+  position: fixed;
+  top: 14px;
+  left: 16px;
+  z-index: 20;
+  padding: 4px 6px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.82);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.brand-home:hover {
+  color: var(--brand); /* Python-blue, matching the catalog accent */
+}
+
+/* Section header/footer — shared chrome for the interactive app AND the captured video. It brands the
+   empty canvas around the fitView-centred scene: an "AWS · FOUNDATIONS" eyebrow (also the back-to-
+   catalog link) + the section title up top, a GraphL brand + §n/N counter below. Sizes are in vh so
+   they hold the SAME pixels at the capture frames (3840×2160 / 1080×1920) yet scale proportionally to
+   any interactive window. The bands are pointer-events:none (they overlay the scene) except the
+   eyebrow button, which re-enables clicks; z-index sits below the portrait slide drawer (z 10) so an
+   open drawer covers them. */
+.reel-head {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 8;
+  padding: 3.75vh 6vw 0;
+  pointer-events: none;
+}
+.reel-head__eyebrow {
+  display: inline-block;
+  margin: 0 0 1.6vh;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 1.4vh;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--brand); /* Python-blue accent, matching the catalog brand */
+  pointer-events: auto; /* the one clickable element in the header → back to catalog */
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.reel-head__eyebrow:hover {
+  color: var(--brand-hover);
+}
+.reel-head__title {
+  margin: 0;
+  font-size: 3.1vh;
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+.reel-foot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 8;
+  padding: 0 6vw 2.9vh;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  pointer-events: none;
+}
+.reel-foot__brand {
+  font-size: 1.55vh;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.9);
+}
+.reel-foot__count {
+  font-size: 1.4vh;
+  color: rgba(255, 255, 255, 0.5);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+/* Reserve the bands so fitView packs the scene BETWEEN them (never under the title). Every section
+   view shows the header/footer, so the reserve is scoped to the section (not just capture). */
+.stage--section .scene-area {
+  top: 12.5vh;
+  bottom: 7.5vh;
+}
+
+/* LANDSCAPE (laptop → 4K video): the slide is a true 42% COLUMN — no absolute cap, so it stays 42%
+   of whatever the frame is, 4K included. The scene fills the rest; drawer transform/toggle off. */
+@media (orientation: landscape) {
+  .stage--section {
+    display: flex;
+  }
+  .scene-area {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    inset: auto;
+  }
+  /* Header/footer carry over but constrained to the SCENE column (left 58%; the slide is the right
+     42%) so they brand the diagram without straddling the slide. The section title is dropped here —
+     it already headlines the slide — leaving the eyebrow on top and the GraphL + §n/N line below,
+     sitting in the scene's fitView margins. Font sizes (vh) are shared with portrait. */
+  .reel-head {
+    right: 42%; /* right edge at the scene/slide boundary → spans only the scene column */
+    padding: 2.8vh 0 0 1.9vw;
+  }
+  .reel-head__title {
+    display: none; /* the section title lives in the slide in landscape */
+  }
+  .reel-head__eyebrow {
+    margin-bottom: 0;
+  }
+  .reel-foot {
+    right: 42%;
+    padding: 0 1.9vw 2.6vh;
+  }
+  /* Scene reserve is portrait-only; in landscape the scene-area is the full-height flex column. */
+  .stage--section .scene-area {
+    top: auto;
+    bottom: auto;
+  }
+  .slide-panel {
+    position: relative;
+    top: auto;
+    right: auto;
+    height: 100%;
+    width: auto;
+    flex: 0 0 42%;
+    transform: none;
+  }
+  .slide-toggle {
+    display: none;
+  }
+  /* Restore the capture-tuned slide metrics (the base carries the larger portrait values). Scoped
+     with .stage--section so it outranks the base .slide-panel__scaler rule, which is defined LATER
+     in the file — at equal specificity that base would otherwise win here too. */
+  .stage--section .slide-panel__scaler {
+    padding: 0 60px;
+    --fs-body: 26px;
+  }
+}
+
+/* --- Slide scaler + markdown ----------------------------------------------- */
+/* The scaler is authored at DESIGN_PANE px (see useSlideScale) and `zoom`-scaled to the live pane,
+   so every dimension below is DESIGN px and stays proportional to the target frame at any size.
+   One type scale drives the whole slide — every size steps off --fs-body, so retuning the slide for
+   capture legibility is a ONE-NUMBER change (adapted from the studio reveal-engine). */
+.slide-panel__scaler {
+  box-sizing: border-box;
+  padding: 0 40px; /* portrait: trimmed side padding to fill the phone width (landscape restores 60) */
+  color: #c8cdd6;
+  --fs-body: 31px; /* portrait/reels: larger so the slide fills the phone (landscape restores 26) */
+  --fs-title: calc(var(--fs-body) * 1.73);
+  --fs-heading: calc(var(--fs-body) * 1.2);
+  --fs-code: calc(var(--fs-body) * 0.78);
+  font-size: var(--fs-body);
+  line-height: 1.45;
+}
+.slide-panel__scaler > :first-child {
+  margin-top: 0;
+}
+.slide-panel__scaler > :last-child {
+  margin-bottom: 0;
+}
+/* `##` → the slide title. */
+.slide-panel__scaler h2 {
+  margin: 0 0 20px;
+  font-size: var(--fs-title);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--brand); /* Python-blue brand accent — same anchor as the reel eyebrow + catalog */
+}
+/* `###` → a section heading in Python-yellow: a warm counter to the cool blue title (the Python
+   logo's blue + yellow). Sentence-case and sized above the body (a real heading, not a quiet
+   eyebrow) — the warm/cool pair structures the slide at a glance while the body stays neutral. */
+.slide-panel__scaler h3 {
+  margin: 30px 0 12px;
+  font-size: var(--fs-heading);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--accent-2); /* Python-yellow */
+}
+.slide-panel__scaler p {
+  margin: 0 0 16px;
+}
+.slide-panel__scaler ul {
+  margin: 0 0 18px;
+  padding-left: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.slide-panel__scaler li {
+  position: relative;
+  padding-left: 30px;
+}
+.slide-panel__scaler ul > li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: rgba(255, 255, 255, 0.28);
+}
+.slide-panel__scaler strong {
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 700;
+}
+.slide-panel__scaler em {
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.85);
+}
+.slide-panel__scaler code {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: var(--fs-code);
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* --- Course catalog / landing page (CourseIndex) ---------------------------- */
+/* The index is a scrollable page (unlike the fixed stage): the catalog of courses, each course a
+   card listing its ordered sections. Python-blue (--idx-accent) is the one accent. */
+.idx {
+  --idx-accent: var(--brand);
+  --idx-muted: #8b909c;
+  --idx-line: rgba(255, 255, 255, 0.09);
+  min-height: 100vh;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 40px 32px 64px;
+  box-sizing: border-box;
+}
+.idx__head {
+  margin-bottom: 36px;
+}
+/* Catalog header: GraphL platform eyebrow over the AWS subject title (no marketing subtitle). */
+.idx__brand {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--idx-accent);
+  margin-bottom: 10px;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+.idx__brand:hover {
+  opacity: 0.72;
+}
+.idx__subject {
+  margin: 0;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+.idx__empty {
+  color: var(--idx-muted);
+  font-size: 16px;
+  padding: 28px;
+  border: 1px dashed var(--idx-line);
+  border-radius: 14px;
+}
+
+/* Courses grid — a single column of accordion cards (tight gap since most sit collapsed). */
+.idx__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+/* A course card = an accordion: a header button (number · title · count · caret) that toggles the
+   section list below it. */
+.idx-card {
+  border: 1px solid var(--idx-line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.018);
+  overflow: hidden;
+}
+.idx-card__head {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 24px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.idx-card__head:hover {
+  background: #22262e;
+}
+/* Divider only when open — a collapsed row is a clean single bar. */
+.idx-card--open .idx-card__head {
+  border-bottom: 1px solid var(--idx-line);
+}
+.idx-card__num {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--idx-accent);
+  border: 1px solid var(--idx-accent);
+  border-radius: 8px;
+  padding: 5px 8px;
+  line-height: 1;
+}
+.idx-card__title {
+  min-width: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.idx-card__count {
+  flex: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--idx-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.idx-card__toggle {
+  flex: none;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--idx-muted);
+  transition: transform 0.18s ease, color 0.15s ease;
+}
+.idx-card--open .idx-card__toggle {
+  transform: rotate(180deg);
+  color: var(--idx-accent);
+}
+
+/* Section list inside a card — thin numbered rows, hover slides the chevron. */
+.idx-sec {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+}
+.idx-sec__row a {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 11px 26px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.12s ease, padding-left 0.12s ease;
+}
+.idx-sec__row a:hover {
+  background: rgba(240, 144, 47, 0.07);
+  padding-left: 32px;
+}
+.idx-sec__num {
+  flex: none;
+  width: 22px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #5b616f;
+}
+.idx-sec__row a:hover .idx-sec__num {
+  color: var(--idx-accent);
+}
+.idx-sec__title {
+  flex: 1;
+  min-width: 0;
+  font-size: 15.5px;
+}
+.idx-sec__chev {
+  flex: none;
+  font-size: 19px;
+  color: #4b515e;
+  transition: color 0.12s ease, transform 0.12s ease;
+}
+.idx-sec__row a:hover .idx-sec__chev {
+  color: var(--idx-accent);
+  transform: translateX(3px);
+}
+
+.idx__foot {
+  margin-top: 40px;
+  color: var(--idx-muted);
+  font-size: 13px;
+}
+.idx__hint kbd {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
+

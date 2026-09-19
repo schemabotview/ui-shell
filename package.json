@@ -1,0 +1,51 @@
+{
+  "name": "@graphlearning/shell",
+  "version": "0.1.0",
+  "description": "The GraphL concept-app shell — hash router, section view (scene left / slide right), slide panel, course catalog and narration channel. A content repo supplies courses + scenes; the shell is everything around them.",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/schemabotview/ui-shell.git"
+  },
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && tsc --emitDeclarationOnly && cp src/styles.css dist/styles.css",
+    "watch": "vite build --watch"
+  },
+  "peerDependencies": {
+    "@graphlearning/flow": ">=0.5.0 <1.0.0",
+    "lucide-react": "^1.28.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@graphlearning/flow": "^0.5.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@xyflow/react": "^12.11.2",
+    "lucide-react": "^1.28.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.5"
+  }
+}

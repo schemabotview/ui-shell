@@ -1,0 +1,7 @@
+/* Stand-in for a content repo's theme.css — the whole per-repo design surface, three tokens.
+   Deliberately NOT any real concept's palette, so the harness never looks like a shipped repo. */
+:root {
+  --brand: #7c5cff;
+  --brand-hover: #9d85ff;
+  --accent-2: #5fd3c4;
+}
