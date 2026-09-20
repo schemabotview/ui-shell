@@ -7,6 +7,10 @@
 export type { Section, Course, SceneLookup } from './types'
 export { slugOf, allSections } from './types'
 export { ConceptApp } from './ConceptApp'
+// Platform chrome — the site bar. Exported, unlike everything below, because it has no route
+// surface for the recorder to drive and so nothing to diverge: it renders on the catalog page and
+// nowhere else. python-lab is the reason it is standalone — React, but no ConceptApp.
+export { SiteHeader } from './SiteHeader'
 
 // DELIBERATELY NOT EXPORTED: SectionView, CourseIndex, SlidePanel, useNarration, useSlideScale.
 // They are reachable only through ConceptApp. Exporting them would ship a supported way to

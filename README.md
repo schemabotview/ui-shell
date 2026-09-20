@@ -29,6 +29,31 @@ import { getScene } from './scenes'
 That is the whole integration. A content repo's `src/` is then `content/`, `scenes/`, `main.tsx`
 and `theme.css`.
 
+## The site bar
+
+`ConceptApp` renders the platform's header — brand, section nav, an empty actions slot — above its
+catalog page, and nowhere else. It is a port of the bar at graphl.in, class for class, so a reader
+crossing from the catalog into a concept app never leaves "the site". Nothing to pass: a content
+repo is a course, which is the default.
+
+It is deliberately platform-coloured, not `--brand`: looking identical on all eight sites is the
+whole reason it exists. It renders on the catalog page ONLY — never on a section, which is a video
+frame — so the recorder cannot see it.
+
+An app that is not a course (`python-lab` is a lab) says so, and one that is not a `ConceptApp` at
+all imports the bar directly — the one part of this package that is exported on its own:
+
+```tsx
+<ConceptApp … kind="labs" />          // marks Labs as the current nav item
+
+import { SiteHeader } from '@graphlearning/shell'
+<SiteHeader kind="labs" actions={<ThemeToggle />} />
+```
+
+`ui-graphl` is buildless vanilla and this is a React package, so the bar exists twice by necessity.
+One design, two implementations — **when you change one, change the other**, or they drift and the
+seam shows on every crossing.
+
 ## The three contracts
 
 **1. Import order.** The three stylesheets cascade: engine, shell, theme. The theme must come last

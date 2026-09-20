@@ -12,18 +12,26 @@ Read `README.md` first — it carries the integration, the three contracts and t
 
 ## Invariants
 
-- **Only `ConceptApp` is exported.** `SectionView`, `CourseIndex`, `SlidePanel`, `useNarration` and
-  `useSlideScale` are deliberately withheld. The route contract (`#/<slug>`, `?capture=1`,
-  `window.__scene.plan()`) is what every repo's recorder drives, and it only holds if every repo
-  composes the pieces identically. Exporting the parts would ship a supported way to diverge again —
-  which is the thing this package exists to end. Same reasoning as `ui-flow` withholding
-  `computeLayout`.
+- **`ConceptApp` and `SiteHeader` are the only exports.** `SectionView`, `CourseIndex`,
+  `SlidePanel`, `useNarration` and `useSlideScale` are deliberately withheld. The route contract
+  (`#/<slug>`, `?capture=1`, `window.__scene.plan()`) is what every repo's recorder drives, and it
+  only holds if every repo composes the pieces identically. Exporting the parts would ship a
+  supported way to diverge again — which is the thing this package exists to end. Same reasoning as
+  `ui-flow` withholding `computeLayout`. `SiteHeader` is the one exception and it proves the rule:
+  it has no route surface, renders on the catalog page only, and python-lab needs it without
+  `ConceptApp` — there is nothing in it to compose differently.
 - **No build-time magic.** `import.meta.env` cannot be read here (see README, contract 3). Anything
   that depends on the consuming app's vite config arrives as a prop.
 - **The engine is a peer.** Never a dependency — one engine copy per app, pinned by the app.
 - **`eyebrow` is a prop, not a derivation.** It is burned into every recorded video, and two repos
   brand themselves differently from their title (`Apache Spark` → `SPARK`,
   `Databricks Data Engineer` → `DATABRICKS`).
+- **The site bar exists twice on purpose.** `ui-graphl` is buildless vanilla; this is a React
+  package. `SiteHeader` + the `.site*` CSS are a port of that page, class for class, and the two
+  copies only stay one design if every change lands in both. The one deliberate difference is
+  `--site-h` and `box-sizing` on `.site__inner`: ui-graphl has a global `* { box-sizing:
+  border-box }` and this stylesheet does NOT — adding one here would move the section view, which
+  is burned into video.
 
 ## Verification bar
 

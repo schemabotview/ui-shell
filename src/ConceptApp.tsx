@@ -17,6 +17,7 @@ export function ConceptApp({
   courses: COURSES,
   getScene,
   audioBase = '/',
+  kind = 'courses',
 }: {
   subject: string // this repo's name, as the catalog's h1 shows it ("Apache Spark")
   courses: Record<string, Course> // the repo's course registry, in syllabus order
@@ -32,6 +33,10 @@ export function ConceptApp({
   // the shell's own base and 404 on every deployed site. The layout under it is the content
   // model's, not the repo's: audio/<courseId>/<sectionId>.wav.
   audioBase?: string
+  // Which section of the site this app belongs to — a catalog.json `kind` id, marked as the
+  // current item in the site bar on the catalog page. Every content repo is a course, so the
+  // default covers all seven; python-lab passes 'labs'.
+  kind?: string
 }) {
   const [hash, setHash] = useState(() => location.hash)
   useEffect(() => {
@@ -174,7 +179,7 @@ export function ConceptApp({
   })
 
   // Empty hash → the course catalog landing page (its own brand, no overlay, no home button here).
-  if (!id) return <CourseIndex courses={Object.values(COURSES)} subject={subject} />
+  if (!id) return <CourseIndex courses={Object.values(COURSES)} subject={subject} kind={kind} />
 
   // The bare SCENE view (a scene id, no course context) keeps the top-left GraphL brand as its route
   // home. The SECTION view instead carries the shared header/footer, whose eyebrow IS the home link,
