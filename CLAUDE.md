@@ -26,12 +26,27 @@ Read `README.md` first — it carries the integration, the three contracts and t
 - **`eyebrow` is a prop, not a derivation.** It is burned into every recorded video, and two repos
   brand themselves differently from their title (`Apache Spark` → `SPARK`,
   `Databricks Data Engineer` → `DATABRICKS`).
-- **The site bar exists twice on purpose.** `ui-graphl` is buildless vanilla; this is a React
-  package. `SiteHeader` + the `.site*` CSS are a port of that page, class for class, and the two
-  copies only stay one design if every change lands in both. The one deliberate difference is
-  `--site-h` and `box-sizing` on `.site__inner`: ui-graphl has a global `* { box-sizing:
-  border-box }` and this stylesheet does NOT — adding one here would move the section view, which
-  is burned into video.
+- **The site bar exists THREE times on purpose**, and they only stay one design if every change
+  lands in all three:
+  1. `ui-graphl/index.html` + `styles.css` — the original. Buildless vanilla, so it can never
+     import a React component.
+  2. **here** — `SiteHeader` + the `.site*` rules, a port of it class for class. Deliberate
+     differences: `--site-h` (the bar's 60px row is a literal over there; `.idx` has to subtract
+     it here) and an explicit `box-sizing` on `.site__inner`, because ui-graphl has a global
+     `* { box-sizing: border-box }` and this stylesheet does NOT — adding one here would move the
+     section view, which is burned into video.
+  3. `python-lab/src/components/SiteHeader.tsx` + the `.site*` block in its `App.css` — a
+     hand-port. It cannot consume this package: the peer `@graphlearning/flow` would drag the
+     react-flow engine into an app with no scenes, and this stylesheet re-declares `.idx`,
+     `.idx-card`, `.idx-card__num`, `.idx-card__title`, `.idx__grid`, `.idx__head` and
+     `.idx__subject` — names that repo already owns with different markup. Deliberate differences:
+     `kind` defaults to `"labs"`, and the bar's colour tokens are scoped to `.site` rather than
+     `:root`, because that repo's `--accent` is One Dark's `#61afef` (the editor surface, matching
+     `@codemirror/theme-one-dark`) while the bar's must stay platform blue.
+
+  A fourth `chrome.css` export — the tokens and `.site*` rules without the catalog — would let a
+  consumer take the bar without the collisions, and would retire copy 3. Considered and deferred
+  on 2026-09-20; the hand-port was the call.
 
 ## Verification bar
 

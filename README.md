@@ -50,9 +50,10 @@ import { SiteHeader } from '@graphlearning/shell'
 <SiteHeader kind="labs" actions={<ThemeToggle />} />
 ```
 
-`ui-graphl` is buildless vanilla and this is a React package, so the bar exists twice by necessity.
-One design, two implementations — **when you change one, change the other**, or they drift and the
-seam shows on every crossing.
+The bar exists **three times** by necessity — `ui-graphl` (buildless vanilla), this package, and
+`python-lab` (which hand-ports it rather than take this package as a dependency; see the invariant
+in CLAUDE.md). One design, three implementations — **when you change one, change all three**, or
+they drift and the seam shows on every crossing.
 
 ## The three contracts
 
