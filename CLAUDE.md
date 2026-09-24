@@ -23,6 +23,22 @@ Read `README.md` first — it carries the integration, the three contracts and t
 - **No build-time magic.** `import.meta.env` cannot be read here (see README, contract 3). Anything
   that depends on the consuming app's vite config arrives as a prop.
 - **The engine is a peer.** Never a dependency — one engine copy per app, pinned by the app.
+- **`theme` is DECK-level and never a viewer toggle.** `ConceptApp` takes `theme?: 'dark' | 'light'`,
+  forwards it to every `SceneView`, and sets `data-theme` on `<html>` for the shell's own light token
+  block. One value, because a light scene inside dark chrome is a white rectangle on a dark page. It
+  is deliberately OUTSIDE the route contract: a deck is a video, and a recorded frame that depended on
+  `prefers-color-scheme` would capture differently on two laptops. A repo sets it once in `main.tsx`.
+  Consequence: a repo going light must ALSO re-pick `--brand` / `--brand-hover` / `--accent-2` — a
+  brand tuned to glow on slate can fall under 3:1 on off-white, and the shell cannot repick those
+  without taking ownership of the one surface it deliberately leaves to the repo.
+- **The attribute goes on `<html>`, not a wrapper.** `ConceptApp` renders a fragment; adding a
+  wrapping element would change the section view's box model, which is burned into every recorded
+  video. An attribute costs no layout.
+- **`--ink-rgb` is why light was additive.** ~20 `rgba(255,255,255,a)` literals in `styles.css` were
+  all "ink at some alpha", so parameterising the CHANNELS converts every one by substitution and
+  leaves dark byte-identical — one token instead of eleven alpha tokens. `--line`, `--header-bg`,
+  `--hover` and `--idx-line` are alpha over it and so flip for free. `--scrim` is the exception and
+  must stay its own token: it follows `--bg`, not the ink, or a light button comes out near-black.
 - **`eyebrow` is a prop, not a derivation.** It is burned into every recorded video, and two repos
   brand themselves differently from their title (`Apache Spark` → `SPARK`,
   `Databricks Data Engineer` → `DATABRICKS`).

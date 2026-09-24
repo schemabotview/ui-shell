@@ -28,7 +28,7 @@
     "watch": "vite build --watch"
   },
   "peerDependencies": {
-    "@graphlearning/flow": ">=0.5.0 <1.0.0",
+    "@graphlearning/flow": ">=0.8.0 <1.0.0",
     "lucide-react": "^1.28.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

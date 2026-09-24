@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { SceneView } from '@graphlearning/flow'
+import { SceneView, type ThemeKey } from '@graphlearning/flow'
 import { SectionView } from './SectionView'
 import type { Course, SceneLookup } from './types'
 import { allSections, slugOf } from './types'
@@ -18,6 +18,7 @@ export function ConceptApp({
   getScene,
   audioBase = '/',
   kind = 'courses',
+  theme = 'dark',
 }: {
   subject: string // this repo's name, as the catalog's h1 shows it ("Apache Spark")
   courses: Record<string, Course> // the repo's course registry, in syllabus order
@@ -37,7 +38,25 @@ export function ConceptApp({
   // current item in the site bar on the catalog page. Every content repo is a course, so the
   // default covers all seven; python-lab passes 'labs'.
   kind?: string
+  // The surface the whole app is painted on — the scene pane (passed to SceneView) AND the shell's
+  // own chrome (set as data-theme on <html>, which styles.css keys its light block off). One value
+  // so the two cannot disagree: a light scene inside dark chrome is a white rectangle on a dark page.
+  //
+  // DECK-LEVEL, and deliberately not a viewer toggle. A deck is a video: the recorded frame must not
+  // depend on the machine rendering it, or the same slug captures differently on two laptops. A repo
+  // sets this once in main.tsx beside its theme.css import — it is the same per-repo design surface
+  // as --brand/--brand-hover/--accent-2, and it stays OUT of the route contract, so no recorder
+  // changes. A repo going light must also re-pick those three tokens: a brand tuned to glow on slate
+  // can fall under 3:1 on off-white, and the shell cannot repick them without owning them.
+  theme?: ThemeKey
 }) {
+  // On <html>, not on a wrapper element: ConceptApp renders a FRAGMENT, and adding a wrapping div
+  // would change the section view's box model — which is burned into every recorded video. An
+  // attribute costs no layout at all.
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    return () => document.documentElement.removeAttribute('data-theme')
+  }, [theme])
   const [hash, setHash] = useState(() => location.hash)
   useEffect(() => {
     const onHash = () => setHash(location.hash)
@@ -203,6 +222,7 @@ export function ConceptApp({
         onNext={() => go(1)}
         narrating={playing}
         onToggleNarration={toggle}
+        theme={theme}
       />
     )
   } else {
@@ -210,7 +230,7 @@ export function ConceptApp({
     const scene = getScene(id)
     content = scene ? (
       <div className="stage">
-        <SceneView scene={scene} />
+        <SceneView scene={scene} theme={theme} />
       </div>
     ) : (
       <div className="stage stage--missing">no scene or slug: {id}</div>

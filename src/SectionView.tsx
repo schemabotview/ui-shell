@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Home, Volume2, VolumeX, ChevronLeft, ChevronRight } from 'lucide-react'
-import { SceneView } from '@graphlearning/flow'
+import { SceneView, type ThemeKey } from '@graphlearning/flow'
 import type { Section, SceneLookup } from './types'
 import { SlidePanel } from './SlidePanel'
 
@@ -27,6 +27,7 @@ export function SectionView({
   onNext,
   narrating = false,
   onToggleNarration,
+  theme = 'dark',
 }: {
   section: Section
   getScene: SceneLookup // the repo's scene registry, injected — the shell owns no scenes
@@ -38,7 +39,11 @@ export function SectionView({
   onPrev?: () => void // previous section (same as ← key) — drives the footer nav
   onNext?: () => void // next section (same as → key)
   narrating?: boolean // is the section clip currently playing (drives the volume icon)
-  onToggleNarration?: () => void // play/pause narration (same as Space)
+  onToggleNarration?: () => void
+  // Forwarded straight to SceneView. Withheld from the barrel like the rest of SectionView, so the
+  // only way a repo sets it is ConceptApp's prop — which is what keeps the scene pane and the
+  // shell's chrome on one value.
+  theme?: ThemeKey // play/pause narration (same as Space)
 }) {
   const [open, setOpen] = useState(false) // drawer state; only affects the portrait layout
   const scene = getScene(section.scene)
@@ -89,7 +94,7 @@ export function SectionView({
         </footer>
       )}
       <div className="scene-area">
-        <SceneView scene={scene} focusId={section.focus} />
+        <SceneView scene={scene} focusId={section.focus} theme={theme} />
       </div>
       {/* Drawer toggle — portrait-only affordance to reveal the slide; suppressed at capture. */}
       {!capture && (

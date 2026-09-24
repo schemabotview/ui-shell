@@ -13,6 +13,21 @@
 :root {
   --bg: #1a1d23; /* Zed-slate (matches graphl-studio/aws) */
   --fg: #eceef2;
+  /* The foreground's RGB CHANNELS, so every `rgba(var(--ink-rgb), a)` in this file flips with the
+     theme. There were ~20 literal rgba(255,255,255,a) values here — all of them "ink at some alpha"
+     — and one token converts every one by substitution rather than needing eleven alpha tokens.
+     Dark keeps the exact values it always had. */
+  --ink-rgb: 255, 255, 255;
+  /* Surfaces lifted OFF --bg: the slide panel, and a catalog card's hover. Literals before 0.4.0. */
+  --surface-lift: #2f333d;
+  --surface-lift-2: #22262e;
+  --slide-ink: #c8cdd6; /* the slide body's text colour */
+  --foot-dim: #5b616f; /* the capture footer's section counter */
+  --foot-dimmer: #4b515e; /* the catalog chevron at rest */
+  /* A SCRIM, not ink: the page colour at 90%, sat behind the floating controls so they stay legible
+     over whatever the scene puts under them. It has to follow --bg, so it cannot be alpha over
+     --ink-rgb like the rest — on light, ink-at-90% would be a near-black button. */
+  --scrim: rgba(26, 29, 35, 0.9);
   /* --- the three tokens a CONTENT REPO owns -------------------------------------------------
      These are NEUTRAL DEFAULTS. Each repo overrides them in its own theme.css, imported AFTER
      this stylesheet so the cascade lets the repo win. They are the entire per-repo design
@@ -39,10 +54,44 @@
   --muted: #8b909c;
   --accent: #5b8cff;
   --accent-soft: rgba(91, 140, 255, 0.14); /* the current nav item */
-  --line: rgba(255, 255, 255, 0.09);
-  --header-bg: rgba(255, 255, 255, 0.014);
-  --hover: rgba(255, 255, 255, 0.05);
+  --line: rgba(var(--ink-rgb), 0.09);
+  --header-bg: rgba(var(--ink-rgb), 0.014);
+  --hover: rgba(var(--ink-rgb), 0.05);
   --site-h: 60px; /* the bar's row height (its 1px rule is extra) — .idx subtracts it from 100vh */
+}
+
+/* LIGHT — same token NAMES, different values, exactly as the note above anticipated. Set by
+   ConceptApp on <html> from its `theme` prop; nothing selects on it but this block.
+ *
+ * WHY AN EXPLICIT ATTRIBUTE AND NOT prefers-color-scheme: a deck is a VIDEO. The recorded frame
+ * cannot depend on the machine that renders it, or the same slug captures differently on two
+ * laptops. The repo chooses the theme at build time and the recorder inherits it.
+ *
+ * --line / --header-bg / --hover / --idx-line are NOT redeclared: they are alpha over --ink-rgb,
+ * so flipping the channels flips them too. That is the whole reason --ink-rgb exists.
+ *
+ * NOT TOUCHED HERE: --brand, --brand-hover and --accent-2. Those belong to the content repo
+ * (theme.css, loaded after this file), and a brand tuned for glow on slate can be unreadable on
+ * off-white — python's is a mid-blue that drops to ~2.5:1 on #f7f8fa. A repo going light must
+ * re-pick its three tokens; the shell cannot do it for them without taking ownership of the one
+ * surface it deliberately leaves alone. */
+:root[data-theme='light'] {
+  --bg: #f7f8fa; /* identical to ui-flow's light surface, so the scene pane and the page agree */
+  --fg: #1a1d23;
+  --ink-rgb: 26, 29, 35;
+  /* On dark the slide panel is LIFTED off the canvas; on light the same relationship means going
+     brighter than the page, not darker — so white, not a grey. */
+  --surface-lift: #ffffff;
+  --surface-lift-2: #eef1f5;
+  --slide-ink: #333a45;
+  --foot-dim: #7a8493;
+  --foot-dimmer: #98a2b1;
+  --muted: #5a6675;
+  /* Platform blue darkened until it carries text contrast on off-white; #5b8cff is tuned to glow
+     on slate and reads washed out here. Still platform blue, still not --brand. */
+  --accent: #2f6fe0;
+  --accent-soft: rgba(47, 111, 224, 0.12);
+  --scrim: rgba(247, 248, 250, 0.9);
 }
 
 html,
@@ -101,8 +150,8 @@ body {
   justify-content: center;
   overflow: auto;
   box-sizing: border-box;
-  background: #2f333d; /* lifted slide surface, off the #1a1d23 scene canvas */
-  border-left: 1px solid rgba(255, 255, 255, 0.09);
+  background: var(--surface-lift); /* lifted slide surface, off the #1a1d23 scene canvas */
+  border-left: 1px solid rgba(var(--ink-rgb), 0.09);
   transform: translateX(100%);
   transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 10;
@@ -118,9 +167,9 @@ body {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(26, 29, 35, 0.9);
-  color: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(var(--ink-rgb), 0.12);
+  background: var(--scrim);
+  color: rgba(var(--ink-rgb), 0.82);
   font-size: 19px;
   line-height: 1;
   cursor: pointer;
@@ -162,9 +211,9 @@ body {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(26, 29, 35, 0.9);
-  color: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(var(--ink-rgb), 0.12);
+  background: var(--scrim);
+  color: rgba(var(--ink-rgb), 0.82);
   cursor: pointer;
   pointer-events: auto; /* the footer container is pointer-events:none; re-enable the buttons */
   transition: color 0.15s, border-color 0.15s;
@@ -203,7 +252,7 @@ body {
   padding: 4px 6px;
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(var(--ink-rgb), 0.82);
   font-family: var(--font-sans);
   font-size: 17px;
   font-weight: 700;
@@ -275,11 +324,11 @@ body {
   font-size: 1.55vh;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(var(--ink-rgb), 0.9);
 }
 .reel-foot__count {
   font-size: 1.4vh;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(var(--ink-rgb), 0.5);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
 }
@@ -355,7 +404,7 @@ body {
 .slide-panel__scaler {
   box-sizing: border-box;
   padding: 0 40px; /* portrait: trimmed side padding to fill the phone width (landscape restores 60) */
-  color: #c8cdd6;
+  color: var(--slide-ink);
   --fs-body: 31px; /* portrait/reels: larger so the slide fills the phone (landscape restores 26) */
   --fs-title: calc(var(--fs-body) * 1.73);
   --fs-heading: calc(var(--fs-body) * 1.2);
@@ -408,23 +457,23 @@ body {
   content: '—';
   position: absolute;
   left: 0;
-  color: rgba(255, 255, 255, 0.28);
+  color: rgba(var(--ink-rgb), 0.28);
 }
 .slide-panel__scaler strong {
-  color: rgba(255, 255, 255, 0.95);
+  color: rgba(var(--ink-rgb), 0.95);
   font-weight: 700;
 }
 .slide-panel__scaler em {
   font-style: italic;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(var(--ink-rgb), 0.85);
 }
 .slide-panel__scaler code {
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
   font-size: var(--fs-code);
   padding: 2px 7px;
   border-radius: 5px;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.9);
+  background: rgba(var(--ink-rgb), 0.08);
+  color: rgba(var(--ink-rgb), 0.9);
 }
 
 /* --- Course catalog / landing page (CourseIndex) ---------------------------- */
@@ -571,8 +620,9 @@ body {
 
 .idx {
   --idx-accent: var(--brand);
-  --idx-muted: #8b909c;
-  --idx-line: rgba(255, 255, 255, 0.09);
+  --idx-muted: var(--muted); /* was the literal #8b909c — the same value --muted already holds, so
+                               aliasing is byte-identical on dark and picks up the light block */
+  --idx-line: rgba(var(--ink-rgb), 0.09);
   /* The bar is a sibling above this column, so the viewport it can fill is what the bar leaves.
      On a phone the bar wraps to two rows and this under-subtracts — harmless, it is a min. */
   min-height: calc(100vh - var(--site-h) - 1px); /* the bar's row, plus its 1px rule */
@@ -615,7 +665,7 @@ body {
 .idx-card {
   border: 1px solid var(--idx-line);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.018);
+  background: rgba(var(--ink-rgb), 0.018);
   overflow: hidden;
 }
 .idx-card__head {
@@ -634,7 +684,7 @@ body {
   transition: background 0.15s ease;
 }
 .idx-card__head:hover {
-  background: #22262e;
+  background: var(--surface-lift-2);
 }
 /* Divider only when open — a collapsed row is a clean single bar. */
 .idx-card--open .idx-card__head {
@@ -701,7 +751,7 @@ body {
   font-size: 13px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: #5b616f;
+  color: var(--foot-dim);
 }
 .idx-sec__row a:hover .idx-sec__num {
   color: var(--idx-accent);
@@ -714,7 +764,7 @@ body {
 .idx-sec__chev {
   flex: none;
   font-size: 19px;
-  color: #4b515e;
+  color: var(--foot-dimmer);
   transition: color 0.12s ease, transform 0.12s ease;
 }
 .idx-sec__row a:hover .idx-sec__chev {
@@ -732,8 +782,8 @@ body {
   font-size: 12px;
   padding: 2px 7px;
   border-radius: 5px;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.9);
+  background: rgba(var(--ink-rgb), 0.08);
+  color: rgba(var(--ink-rgb), 0.9);
 }
 
 /* The bar's phone gutter is 20px, so the catalog column's has to be too — otherwise the brand and
