@@ -23,7 +23,25 @@ Read `README.md` first — it carries the integration, the three contracts and t
 - **No build-time magic.** `import.meta.env` cannot be read here (see README, contract 3). Anything
   that depends on the consuming app's vite config arrives as a prop.
 - **The engine is a peer.** Never a dependency — one engine copy per app, pinned by the app.
-- **`theme` is DECK-level and never a viewer toggle.** `ConceptApp` takes `theme?: 'dark' | 'light'`,
+- **`theme` is the DECK's declared look; the READER may override it, and capture ignores the reader.**
+  `ConceptApp` takes `theme?: 'dark' | 'light'` and forwards it to every `SceneView`. A reader can
+  override it from the toggle in `SiteHeader` — which is safe for exactly one reason: SiteHeader
+  renders on the CATALOG PAGE ONLY, never on a section, so the control can never appear in a captured
+  frame. `?capture=1` pins to the declared prop and ignores stored choice entirely; without that pin
+  a 4K capture would depend on whoever last used the browser.
+- **The reader's choice IS the platform's.** Key `graphl:theme`, values `light`/`dark`/absent,
+  switch `data-theme` on `<html>` — the same four things ui-graphl/theme.js owns, because every
+  GraphL app is same-origin under graphl.in and a reader who picks light on the catalog should walk
+  into a concept app already light. Cross-tab `storage` sync and the one-frame `.theme-swap` are
+  ported too. ONE DELIBERATE DIVERGENCE: at the catalog the neutral state means "follow the OS"; here
+  it means "follow the DECK". A deck is authored — its scenes, slides and narration were built and
+  reviewed in one look — and letting an OS setting silently repaint that is not the same decision as
+  letting it repaint a directory page. The stored VALUES stay identical, so the two never disagree
+  about an explicit choice; only the absence is read differently.
+- **The toggle is now a FOURTH thing that must land in all three site bars.** `ThemeToggle` +
+  `.site__icon` + `.theme-swap` exist here and at ui-graphl; python-lab's hand-port does NOT have it
+  yet, so the bar currently differs across the three. See the site-bar invariant below.
+- *(superseded)* `theme` is DECK-level and never a viewer toggle. `ConceptApp` takes `theme?: 'dark' | 'light'`,
   forwards it to every `SceneView`, and sets `data-theme` on `<html>` for the shell's own light token
   block. One value, because a light scene inside dark chrome is a white rectangle on a dark page. It
   is deliberately OUTSIDE the route contract: a deck is a video, and a recorded frame that depended on

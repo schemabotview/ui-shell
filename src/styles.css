@@ -94,6 +94,14 @@
   --scrim: rgba(247, 248, 250, 0.9);
 }
 
+/* Set for the single frame a theme swap lands in, so the whole page changes at once instead of the
+   ground flipping while everything with a hover transition cross-fades after it. Ported from
+   ui-graphl's styles.css — the site bar exists three times and they only stay one design if every
+   change lands in all of them. */
+.theme-swap * {
+  transition: none !important;
+}
+
 html,
 body,
 #root {

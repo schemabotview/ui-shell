@@ -5,6 +5,8 @@ import type { Course, SceneLookup } from './types'
 import { allSections, slugOf } from './types'
 import { CourseIndex } from './CourseIndex'
 import { useNarration } from './useNarration'
+import { useTheme } from './useTheme'
+import { ThemeToggle } from './ThemeToggle'
 
 // Route contract (hash routing):
 //   #/<course-section>  → SECTION view — the final composited output of a slug (scene bg + slide)
@@ -50,13 +52,7 @@ export function ConceptApp({
   // can fall under 3:1 on off-white, and the shell cannot repick them without owning them.
   theme?: ThemeKey
 }) {
-  // On <html>, not on a wrapper element: ConceptApp renders a FRAGMENT, and adding a wrapping div
-  // would change the section view's box model — which is burned into every recorded video. An
-  // attribute costs no layout at all.
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-    return () => document.documentElement.removeAttribute('data-theme')
-  }, [theme])
+
   const [hash, setHash] = useState(() => location.hash)
   useEffect(() => {
     const onHash = () => setHash(location.hash)
@@ -65,6 +61,12 @@ export function ConceptApp({
   }, [])
 
   const capture = new URLSearchParams(location.search).get('capture') === '1'
+
+  // `theme` is the DECK's declared look; the reader may override it for live viewing via the toggle
+  // on the catalog, and that choice is the platform-wide `graphl:theme` the catalog at graphl.in
+  // writes — so crossing from there into a concept app carries it. Capture pins to the deck and
+  // ignores the reader entirely; see useTheme.ts.
+  const { theme: activeTheme, choice, cycle } = useTheme(theme, capture)
   const id = hash.replace(/^#\/?/, '')
 
   // Which course are we in? The recorder lands on #/<course> to read the plan; a human lands on a
@@ -198,7 +200,16 @@ export function ConceptApp({
   })
 
   // Empty hash → the course catalog landing page (its own brand, no overlay, no home button here).
-  if (!id) return <CourseIndex courses={Object.values(COURSES)} subject={subject} kind={kind} />
+  if (!id)
+    return (
+      <CourseIndex
+        courses={Object.values(COURSES)}
+        subject={subject}
+        kind={kind}
+        // The toggle rides the catalog only — never a section, which is a video frame.
+        actions={capture ? null : <ThemeToggle choice={choice} onCycle={cycle} />}
+      />
+    )
 
   // The bare SCENE view (a scene id, no course context) keeps the top-left GraphL brand as its route
   // home. The SECTION view instead carries the shared header/footer, whose eyebrow IS the home link,
@@ -222,7 +233,7 @@ export function ConceptApp({
         onNext={() => go(1)}
         narrating={playing}
         onToggleNarration={toggle}
-        theme={theme}
+        theme={activeTheme}
       />
     )
   } else {
@@ -230,7 +241,7 @@ export function ConceptApp({
     const scene = getScene(id)
     content = scene ? (
       <div className="stage">
-        <SceneView scene={scene} theme={theme} />
+        <SceneView scene={scene} theme={activeTheme} />
       </div>
     ) : (
       <div className="stage stage--missing">no scene or slug: {id}</div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Course } from './types'
 import { allSections } from './types'
 import { SiteHeader } from './SiteHeader'
+import type { ReactNode } from 'react'
 
 // The landing page: the GraphL course catalog. Each course is an ACCORDION — a header row (number ·
 // title · section count) that expands to reveal its ordered sections; a section row routes to
@@ -11,10 +12,15 @@ export function CourseIndex({
   courses,
   subject,
   kind,
+  actions,
 }: {
   courses: Course[]
   subject: string
   kind?: string // which nav section this app belongs to; see SiteHeader
+  // SiteHeader's right-hand slot — the theme toggle. It rides the catalog ONLY, which is the whole
+  // reason a reader-facing theme control is compatible with a deck being a video: SiteHeader never
+  // renders on a section, so the control can never appear in a captured frame.
+  actions?: ReactNode
 }) {
   // Which courses are expanded (multiple may be open). All start collapsed so the catalog opens as a
   // compact one-row-per-course list — it stays tidy as courses grow to ~11.
@@ -32,7 +38,7 @@ export function CourseIndex({
     // viewport) while .idx is a 940px centred column. Both use the same width and gutters, so the
     // brand lines up with the card edge below it.
     <>
-      <SiteHeader kind={kind} />
+      <SiteHeader kind={kind} actions={actions} />
       <div className="idx">
         {/* The GraphL wordmark used to be an eyebrow here; it is in the bar above now. What stays
             is `subject` — the repo's own name ("Python", "SQL"), the one piece of this page the
