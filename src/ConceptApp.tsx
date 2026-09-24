@@ -234,6 +234,9 @@ export function ConceptApp({
         narrating={playing}
         onToggleNarration={toggle}
         theme={activeTheme}
+        // Suppressed under capture by SectionView's own !capture guard, but passed as undefined here
+        // too so the button is not even constructed for a recording.
+        onToggleTheme={capture ? undefined : cycleTheme}
       />
     )
   } else {

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Home, Volume2, VolumeX, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Home, Volume2, VolumeX, ChevronLeft, ChevronRight, Moon, Sun } from 'lucide-react'
 import { SceneView, type ThemeKey } from '@graphlearning/flow'
 import type { Section, SceneLookup } from './types'
 import { SlidePanel } from './SlidePanel'
@@ -28,6 +28,7 @@ export function SectionView({
   narrating = false,
   onToggleNarration,
   theme = 'dark',
+  onToggleTheme,
 }: {
   section: Section
   getScene: SceneLookup // the repo's scene registry, injected — the shell owns no scenes
@@ -39,11 +40,16 @@ export function SectionView({
   onPrev?: () => void // previous section (same as ← key) — drives the footer nav
   onNext?: () => void // next section (same as → key)
   narrating?: boolean // is the section clip currently playing (drives the volume icon)
-  onToggleNarration?: () => void
+  onToggleNarration?: () => void // play/pause narration (same as Space)
   // Forwarded straight to SceneView. Withheld from the barrel like the rest of SectionView, so the
   // only way a repo sets it is ConceptApp's prop — which is what keeps the scene pane and the
   // shell's chrome on one value.
-  theme?: ThemeKey // play/pause narration (same as Space)
+  theme?: ThemeKey
+  // Flips the theme from the section itself. SiteHeader (and its toggle) never renders here — a
+  // section is a video frame — but the footer control bar is ALREADY interactive-only and suppressed
+  // under ?capture=1, exactly like the pager and the drawer handle beside it. So the control lands in
+  // the cluster that exists for precisely this: things a reader may touch and a recording never sees.
+  onToggleTheme?: () => void
 }) {
   const [open, setOpen] = useState(false) // drawer state; only affects the portrait layout
   const scene = getScene(section.scene)
@@ -79,6 +85,19 @@ export function SectionView({
             >
               {narrating ? <Volume2 size={18} /> : <VolumeX size={18} />}
             </button>
+            {/* Lucide here, a text glyph in SiteHeader's copy — deliberately. The bar is a port of
+                ui-graphl and must match it character for character; this cluster's siblings are all
+                lucide at 17-19px, and a text moon beside them would read as a different control. */}
+            {onToggleTheme && (
+              <button
+                className="reel-foot__ctrl"
+                onClick={onToggleTheme}
+                aria-label={theme === 'dark' ? 'Dark theme. Switch to light theme.' : 'Light theme. Switch to dark theme.'}
+                title={theme === 'dark' ? 'Dark theme. Switch to light theme.' : 'Light theme. Switch to dark theme.'}
+              >
+                {theme === 'dark' ? <Moon size={17} /> : <Sun size={17} />}
+              </button>
+            )}
           </span>
           <span className="reel-foot__nav">
             <button className="reel-foot__ctrl" onClick={onPrev} aria-label="Previous section (←)" title="Previous section (←)">

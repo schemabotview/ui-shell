@@ -25,9 +25,12 @@ Read `README.md` first — it carries the integration, the three contracts and t
 - **The engine is a peer.** Never a dependency — one engine copy per app, pinned by the app.
 - **`theme` is the DECK's declared look; the READER may override it, and capture ignores the reader.**
   `ConceptApp` takes `theme?: 'dark' | 'light'` and forwards it to every `SceneView`. A reader can
-  override it from the toggle in `SiteHeader` — which is safe for exactly one reason: SiteHeader
-  renders on the CATALOG PAGE ONLY, never on a section, so the control can never appear in a captured
-  frame. `?capture=1` pins to the declared prop and ignores stored choice entirely; without that pin
+  override it from a toggle in TWO places, both of which are suppressed at capture: `SiteHeader` (the
+  catalog page — SiteHeader never renders on a section) and the section's own footer control bar,
+  which already exists as an interactive-only cluster behind `!capture` alongside Home, narration and
+  the pager. So the control can never appear in a captured frame from either route. The two render
+  differently on purpose: the bar uses a text glyph because it is a character-for-character port of
+  ui-graphl, the footer uses lucide because every sibling in that cluster is lucide. `?capture=1` pins to the declared prop and ignores stored choice entirely; without that pin
   a 4K capture would depend on whoever last used the browser.
 - **The reader's choice IS the platform's.** Key `graphl:theme`, values `light`/`dark`/absent,
   switch `data-theme` on `<html>` — the same four things ui-graphl/theme.js owns, because every
