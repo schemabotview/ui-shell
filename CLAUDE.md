@@ -33,11 +33,16 @@ Read `README.md` first — it carries the integration, the three contracts and t
   switch `data-theme` on `<html>` — the same four things ui-graphl/theme.js owns, because every
   GraphL app is same-origin under graphl.in and a reader who picks light on the catalog should walk
   into a concept app already light. Cross-tab `storage` sync and the one-frame `.theme-swap` are
-  ported too. ONE DELIBERATE DIVERGENCE: at the catalog the neutral state means "follow the OS"; here
-  it means "follow the DECK". A deck is authored — its scenes, slides and narration were built and
-  reviewed in one look — and letting an OS setting silently repaint that is not the same decision as
-  letting it repaint a directory page. The stored VALUES stay identical, so the two never disagree
-  about an explicit choice; only the absence is read differently.
+  ported too. TWO DELIBERATE DIVERGENCES, both from the same fact — a deck is authored and a catalog
+  is not:
+  1. The catalog CYCLES through three states (system → light → dark); this TOGGLES between two. The
+     neutral step would have to be labelled "Deck theme", which means nothing to a reader and costs
+     them a press to get where they were going.
+  2. At the catalog an absent value means "follow the OS"; here it means "follow the DECK". Letting
+     an OS setting silently repaint scenes, slides and narration that were built and reviewed in one
+     look is not the same decision as letting it repaint a directory page.
+  The stored VALUES stay identical (`light`/`dark`/absent), so the two apps never disagree about an
+  explicit choice — only the absence is read differently, and this one never writes it back.
 - **The toggle is now a FOURTH thing that must land in all three site bars.** `ThemeToggle` +
   `.site__icon` + `.theme-swap` exist here and at ui-graphl; python-lab's hand-port does NOT have it
   yet, so the bar currently differs across the three. See the site-bar invariant below.

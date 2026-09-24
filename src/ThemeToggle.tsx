@@ -1,30 +1,31 @@
 // The theme control, for SiteHeader's `actions` slot. A PORT of ui-graphl's #theme button — same
-// three-step cycle, same glyphs, same "where you are AND what the press does" accessible name.
+// square icon, same "where you are AND what the press does" accessible name.
 //
-// WHY IT IS SAFE TO HAVE A READER CONTROL AT ALL, given a deck is a video: this renders inside
-// SiteHeader, and SiteHeader renders on the CATALOG PAGE ONLY, never on a section. The control
-// itself can therefore never appear in a captured frame. The choice it stores does carry into
-// sections when a human browses them, which is the point — and capture pins to the declared deck
-// theme regardless (see useTheme's resolveTheme).
+// TWO STATES, dark <-> light. The catalog cycles through a third, `system`; this does not, and the
+// difference is deliberate. A concept app has an authored look, so the neutral step would have to be
+// labelled "Deck theme" — a phrase that means nothing to a reader and costs them a press to get
+// where they were going. The ABSENCE of a stored choice still resolves to the deck's theme, which is
+// what a first visit and every capture get; the control just never walks back to it.
 //
-// The neutral step is labelled "Deck theme", not "System": here it means the look the repo authored,
-// not the OS. See the note in useTheme.ts about that one deliberate divergence from the catalog.
+// WHY A READER CONTROL IS SAFE AT ALL, given a deck is a video: this renders inside SiteHeader, and
+// SiteHeader renders on the CATALOG PAGE ONLY, never on a section. The control can therefore never
+// appear in a captured frame, and capture pins to the declared deck theme regardless (see useTheme).
 
-import { THEME_CYCLE, type ThemeChoice } from './useTheme'
+import type { ThemeKey } from '@graphlearning/flow'
 
-const FACE: Record<ThemeChoice, { glyph: string; label: string }> = {
-  deck: { glyph: '◐', label: 'Deck theme' },
-  light: { glyph: '☀', label: 'Light theme' },
+// The glyph shows where you ARE, not where the press goes — a toggle that previews its destination
+// reads as already-switched at a glance.
+const FACE: Record<ThemeKey, { glyph: string; label: string }> = {
   dark: { glyph: '☾', label: 'Dark theme' },
+  light: { glyph: '☀', label: 'Light theme' },
 }
 
-export function ThemeToggle({ choice, onCycle }: { choice: ThemeChoice; onCycle: () => void }) {
-  const next = THEME_CYCLE[(THEME_CYCLE.indexOf(choice) + 1) % THEME_CYCLE.length]
-  // The glyph alone cannot say where you are or what pressing does, so the name says both.
-  const label = `${FACE[choice].label}. Switch to ${FACE[next].label.toLowerCase()}.`
+export function ThemeToggle({ theme, onToggle }: { theme: ThemeKey; onToggle: () => void }) {
+  const next: ThemeKey = theme === 'dark' ? 'light' : 'dark'
+  const label = `${FACE[theme].label}. Switch to ${FACE[next].label.toLowerCase()}.`
   return (
-    <button className="site__icon" type="button" onClick={onCycle} aria-label={label} title={label}>
-      {FACE[choice].glyph}
+    <button className="site__icon" type="button" onClick={onToggle} aria-label={label} title={label}>
+      {FACE[theme].glyph}
     </button>
   )
 }

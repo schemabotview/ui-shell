@@ -66,7 +66,7 @@ export function ConceptApp({
   // on the catalog, and that choice is the platform-wide `graphl:theme` the catalog at graphl.in
   // writes — so crossing from there into a concept app carries it. Capture pins to the deck and
   // ignores the reader entirely; see useTheme.ts.
-  const { theme: activeTheme, choice, cycle } = useTheme(theme, capture)
+  const { theme: activeTheme, toggle: cycleTheme } = useTheme(theme, capture)
   const id = hash.replace(/^#\/?/, '')
 
   // Which course are we in? The recorder lands on #/<course> to read the plan; a human lands on a
@@ -207,7 +207,7 @@ export function ConceptApp({
         subject={subject}
         kind={kind}
         // The toggle rides the catalog only — never a section, which is a video frame.
-        actions={capture ? null : <ThemeToggle choice={choice} onCycle={cycle} />}
+        actions={capture ? null : <ThemeToggle theme={activeTheme} onToggle={cycleTheme} />}
       />
     )
 

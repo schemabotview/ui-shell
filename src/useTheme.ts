@@ -23,47 +23,49 @@ import type { ThemeKey } from '@graphlearning/flow'
 
 const KEY = 'graphl:theme'
 
-/** What the READER chose. 'deck' is the neutral state: no stored value, defer to the repo's prop. */
-export type ThemeChoice = 'deck' | 'light' | 'dark'
-export const THEME_CYCLE: ThemeChoice[] = ['deck', 'light', 'dark']
-
+// The stored choice, or null for "nothing chosen yet" — which means the deck's declared theme.
+//
+// THE TOGGLE IS TWO-STATE: dark <-> light, and nothing else. There is no reader-visible "deck" or
+// "system" step. A third state costs a reader a press to get where they were going and has to be
+// labelled something ("Deck theme") that means nothing to them. The ABSENCE of a stored value still
+// means the deck's theme — that is what a first visit and every capture get — but once a reader has
+// an opinion the control simply flips, which is what every dark-mode toggle they have ever used does.
+//
 // localStorage throws in some privacy modes. A broken toggle must never take the page with it, so
-// every access is guarded and the fallback is simply "deck" — which is the authored look anyway.
-export function readChoice(): ThemeChoice {
+// every access is guarded and the fallback is simply "nothing chosen".
+export function readStored(): ThemeKey | null {
   try {
     const stored = localStorage.getItem(KEY)
-    return stored === 'light' || stored === 'dark' ? stored : 'deck'
+    return stored === 'light' || stored === 'dark' ? stored : null
   } catch {
-    return 'deck'
+    return null
   }
 }
 
-function writeChoice(choice: ThemeChoice) {
+function writeStored(choice: ThemeKey) {
   try {
-    if (choice === 'deck') localStorage.removeItem(KEY)
-    else localStorage.setItem(KEY, choice)
+    localStorage.setItem(KEY, choice)
   } catch {
     /* the choice will not survive a reload; everything else still works */
   }
 }
 
 /**
- * The theme actually painted. CAPTURE PINS IT TO THE DECK, ignoring both the stored choice and the
- * reader entirely — and that is not a nicety. A recorder runs a fresh headless profile with empty
- * storage, so without this pin the neutral state would have to resolve somewhere, and every 4K
- * capture would depend on the machine that rendered it. The declared prop is the only thing burned
- * into a video.
+ * The theme actually painted. CAPTURE PINS IT TO THE DECK, ignoring the stored choice and the reader
+ * entirely — and that is not a nicety. A recorder runs a fresh headless profile with empty storage,
+ * so without this pin what a capture painted would depend on the machine that rendered it. The
+ * declared prop is the only thing burned into a video.
  */
-export const resolveTheme = (deck: ThemeKey, choice: ThemeChoice, capture: boolean): ThemeKey =>
-  capture || choice === 'deck' ? deck : choice
+export const resolveTheme = (deck: ThemeKey, stored: ThemeKey | null, capture: boolean): ThemeKey =>
+  capture || !stored ? deck : stored
 
 /**
- * Owns the reader's choice and keeps <html data-theme> in step with it. Returns the resolved theme
- * to hand SceneView, plus the choice and a cycler for the toggle.
+ * Owns the reader's choice and keeps <html data-theme> in step with it. Returns the theme to hand
+ * SceneView, plus a two-state flip for the toggle.
  */
 export function useTheme(deck: ThemeKey, capture: boolean) {
-  const [choice, setChoice] = useState<ThemeChoice>(() => (capture ? 'deck' : readChoice()))
-  const theme = resolveTheme(deck, choice, capture)
+  const [stored, setStored] = useState<ThemeKey | null>(() => (capture ? null : readStored()))
+  const theme = resolveTheme(deck, stored, capture)
 
   // The attribute goes on <html>, not a wrapper: ConceptApp renders a fragment, and a wrapping
   // element would change the section view's box model — which is burned into every recorded video.
@@ -77,7 +79,7 @@ export function useTheme(deck: ThemeKey, capture: boolean) {
   useEffect(() => {
     if (capture) return
     const onStorage = (e: StorageEvent) => {
-      if (e.key === KEY || e.key === null) setChoice(readChoice())
+      if (e.key === KEY || e.key === null) setStored(readStored())
     }
     window.addEventListener('storage', onStorage)
     return () => window.removeEventListener('storage', onStorage)
@@ -87,14 +89,14 @@ export function useTheme(deck: ThemeKey, capture: boolean) {
   // and without suppressing them the ground flips at once while the nav and cards cross-fade behind
   // it — the switch reads as a smear rather than a change. Two nested rAFs: the first runs before
   // the paint that applies the new colours, the second after it. Ported from ui-graphl's theme.js.
-  const cycle = useCallback(() => {
-    const next = THEME_CYCLE[(THEME_CYCLE.indexOf(readChoice()) + 1) % THEME_CYCLE.length]
-    writeChoice(next)
+  const toggle = useCallback(() => {
+    const next: ThemeKey = theme === 'dark' ? 'light' : 'dark'
+    writeStored(next)
     const root = document.documentElement
     root.classList.add('theme-swap')
-    setChoice(next)
+    setStored(next)
     requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('theme-swap')))
-  }, [])
+  }, [theme])
 
-  return { theme, choice, cycle }
+  return { theme, toggle }
 }
