@@ -119,6 +119,23 @@ They are `bin` entries, wired through each repo's `npm run`:
 | `npm run gen:desc` | video descriptions + chapters |
 | `npm run gen:audio` | the narration manifest |
 
+**Capture is not realtime.** `record` and `record:reels` screencast one short window per section and
+loop it over the narration (`-stream_loop`), because the only moving thing in a frame is the engine's
+edge pulse and that pulse has a 2.4s period — and a pulse crosses its whole edge in exactly one
+period, so one period is the whole picture. A 90-second section is captured in ~3.4s; the output's
+timing is unchanged.
+
+| env | default | what it does |
+|---|---|---|
+| `LOOP_CYCLES` | `1` | window length, in pulse periods → 2.4s |
+| `LOOP_MS` | — | window length in ms, snapped to a whole period |
+| `PULSE_S` | `2.4` | the engine's `animateMotion dur` — must match `ui-flow`'s `FlowEdge` |
+| `LOOP_LEAD_S` | `0.5` | discarded screencast ramp-up before the window |
+| `NO_LOOP` | — | set to hold for the whole wav, as before |
+
+The window **must** be a whole multiple of `PULSE_S` or the loop join shows a jump — which is why
+`LOOP_MS` is snapped rather than taken literally.
+
 **Where things live.** Scripts resolve two roots explicitly (`scripts/_paths.mjs`), because from
 `node_modules` they can no longer use their own directory:
 

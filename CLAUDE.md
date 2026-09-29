@@ -110,6 +110,43 @@ This package owns no scenes and no courses. `getScene` and `courses` are injecte
 They live here because they drive the route contract this package defines — see README for the
 roots (`repoDir` / `dataDir` / `pkgDir`), `loadPeer`, and `concept.json`.
 
+**Loop capture (both recorders).** A section is screencast for ONE short window — `LEAD_S` of
+discarded ramp-up + `LOOP_CYCLES × PULSE_S` (one 2.4s period by default) + a guard — which is
+normalized to an exact CFR clip and repeated over the narration's length by `-stream_loop -1`,
+bounded by `-t total`. It rests on the engine: the edge pulse (`FlowEdge`, `animateMotion dur="2.4s"`) is the only motion in a frame, so the
+composition is periodic with a 2.4s period and any whole multiple of it joins back onto itself —
+whatever phase the recording started in. Hence two rules:
+
+- **The window must be a whole multiple of `PULSE_S`.** `LOOP_MS` / `LOOP_CYCLES` are snapped for
+  exactly this reason. Measured on a 48s `models` segment: with a snapped window the frame-to-frame
+  difference at each loop join is 41–45 against a median of 43 — indistinguishable from an ordinary
+  frame step, at one cycle and at three. Faking a 3.7s period puts a 102 spike (the distribution's
+  maximum) at every join, once every 111 frames. The unsnapped version is not subtly worse, it is a
+  visible jump.
+- **One period is already the whole picture.** A pulse crosses its entire edge in exactly `dur`, so
+  cycle 2 is a re-recording of cycle 1 — which is why the default is 1 and not 3. What more cycles
+  actually buy is dilution: a capture hiccup inside the window repeats for the whole section, so a
+  section that shows one is a reason to raise `LOOP_CYCLES`, not to abandon looping.
+- **A run of identical frames is usually the SCENE, not the capture.** Counting near-zero
+  frame-to-frame differences looks like a dropped-frame detector and is not one. `FlowEdge`'s label
+  pill is opaque by design (it *interrupts* the line rather than crossing it) and renders in
+  `EdgeLabelRenderer`, above the edges — so a pulse is invisible while it crosses its path midpoint.
+  In a scene where every edge carries a label and the pulses are in phase, all of them vanish
+  together for ~0.3s in the middle of each period, and the frame genuinely does not change. Measured
+  on `models/graph-shape`: 12.3% "duplicate" frames under the old full-length screencast, 9.0% under
+  the looped window, and **11.7% under a deterministic frame-stepped capture that cannot stall** —
+  which is what proves it is the scene. Before believing such a metric, step the SMIL clock
+  (`pauseAnimations` + `setCurrentTime`) to the static window and look at the frame.
+- **`PULSE_S` duplicates a value `ui-flow` owns.** Change the engine's `dur` and every recorded video
+  gets that jump back, with a green build. Noted as an invariant in `ui-flow/CLAUDE.md` too.
+
+The segment's timing is unchanged by any of this — `total` is still bell + wav + tail, still driven by
+ffprobe — so a loop-captured segment concatenates with an old one. Only the capture is shorter.
+`NO_LOOP=1` restores the previous hold-for-the-whole-wav capture. The intermediate clip is encoded
+ultrafast/crf 14 (near-lossless) because the segment's own encode is what sets final quality and
+carries the gradfun deband; that is a second generation, which flat dark UI tolerates and photographic
+content would not.
+
 Three traps, all found the hard way during the extraction:
 
 - **Never use `import.meta.url` to find anything but package-owned files.** From `node_modules`

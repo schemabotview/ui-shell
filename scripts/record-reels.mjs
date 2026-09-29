@@ -11,7 +11,16 @@
 //   • NINE INDEPENDENT files (out/reels/<course>-<id>.mp4), one per section — NOT concatenated. Each
 //     reel is its own upload, so there is NO separator bell and NO lead-in sting.
 //   • Otherwise the capture contract is identical: navigate the hash → wait for the painted,
-//     fitView-settled frame → screencast for the wav's duration (ffprobe) + a short tail → mux.
+//     fitView-settled frame → screencast → mux against the wav's duration (ffprobe) + a short tail.
+//
+// LOOP CAPTURE, same as the 4K recorder: the only motion in the frame is the edge pulse — ui-flow's
+// FlowEdge draws it as an SVG <animateMotion dur="2.4s" repeatCount="indefinite"> per edge — so the
+// composition is PERIODIC with a 2.4s period. We screencast ONE window that is a whole number of
+// those periods (default ONE, 2.4s — a pulse crosses its whole edge in exactly one period), which by
+// construction shows every edge's flow end-to-end and joins back onto itself seamlessly whatever
+// phase the recording started in, then LOOP it over
+// the narration's length at encode time (-stream_loop -1) instead of holding the browser for the
+// whole wav. LOOP_MS snaps to a whole period; NO_LOOP=1 restores the old full-length capture.
 //
 // TRUE portrait pixels: the layout is fluid, so we set the puppeteer VIEWPORT to 1080×1920 directly
 // and page.screencast() records at exactly that CSS size. Audio is read straight off disk from
@@ -51,6 +60,29 @@ const PRESET = process.env.VIDEO_PRESET ?? 'slow'
 const BITRATE = process.env.VIDEO_BITRATE ?? '16M' // 1080×1920 ≈ 1080p pixel budget
 const ENCODE_SIG = IS_X26X ? `${VIDEO_CODEC}:crf${CRF}:${PRESET}` : `${VIDEO_CODEC}:b${BITRATE}`
 
+// ---- the loop window --------------------------------------------------------------------
+// The edge pulse's period, from ui-flow's FlowEdge (`animateMotion dur="2.4s"`).
+const PULSE_S = process.env.PULSE_S ? +process.env.PULSE_S : 2.4
+const NO_LOOP = !!process.env.NO_LOOP
+// The recorded window, in WHOLE pulse periods: LOOP_MS (or LOOP_CYCLES) is snapped to the nearest
+// one, because a window that is not a whole period ends on a different pulse position than it began
+// and the loop join then jumps. Default 1 → ONE period, 2.4s: a pulse crosses its whole edge in
+// exactly one period, so a single cycle already shows every edge's flow end-to-end and more cycles
+// only record the same picture again. The cost of the short window is that a capture hiccup inside
+// it (a dropped frame, a late re-fit) repeats for the whole section instead of a fifth of it — raise
+// LOOP_CYCLES if a section ever shows one.
+const LOOP_CYCLES = Math.max(1, Math.round(
+  (process.env.LOOP_MS ? +process.env.LOOP_MS / 1000 : +(process.env.LOOP_CYCLES ?? 1) * PULSE_S) / PULSE_S,
+))
+const LOOP_S = LOOP_CYCLES * PULSE_S
+// LEAD_S is discarded ramp-up (screencast takes a moment to emit its first frame); GUARD_S is
+// recorded past the window so the exact trim can never run off the end of the webm.
+const LEAD_S = process.env.LOOP_LEAD_S ? +process.env.LOOP_LEAD_S : 0.5
+const GUARD_S = 0.5
+const LOOP_SIG = NO_LOOP ? 'none' : `loop:v1:${LOOP_S.toFixed(2)}+${LEAD_S.toFixed(2)}`
+// Intermediate quality for the loop clip (see makeLoopClip) when the codec is not CRF-based.
+const LOOP_BITRATE = process.env.LOOP_BITRATE ?? '40M'
+
 // ---- ffmpeg helpers ---------------------------------------------------------------------
 async function ffprobeDuration(file) {
   const { stdout } = await run('ffprobe', [
@@ -59,13 +91,29 @@ async function ffprobeDuration(file) {
   return parseFloat(stdout.trim())
 }
 
-// Mux one reel's webm + clip → a standalone MP4. Same crisp encode as the 4K recorder (gradfun
+// Normalize the recording into the clip that gets looped: exactly LOOP_S starting LEAD_S in, at a
+// forced CFR so the frame count is whole and the join lands on a frame boundary. The trim is
+// OUTPUT-side (-ss after -i) — frame-accurate, and the source is only seconds long. Near-lossless and
+// ultrafast on purpose: this is an intermediate, and the reel's own encode below sets final quality.
+async function makeLoopClip(webm, dst) {
+  const quality = IS_X26X ? ['-preset', 'ultrafast', '-crf', '14'] : ['-b:v', LOOP_BITRATE]
+  await run(FFMPEG, [
+    '-y', '-i', webm, '-ss', LEAD_S.toFixed(3), '-t', LOOP_S.toFixed(3),
+    '-an', '-r', String(FPS), '-vsync', 'cfr',
+    '-c:v', VIDEO_CODEC, ...quality, '-pix_fmt', 'yuv420p',
+    dst,
+  ])
+}
+
+// Mux one reel's video + clip → a standalone MP4. Same crisp encode as the 4K recorder (gradfun
 // deband, yuv420p, faststart) but this is a FINAL file, not a concat segment, so it needs no uniform
 // timescale. `total` (clip + tail) bounds both streams; apad extends the clip with silence to fill.
-async function encodeReel(webm, clip, total, outMp4) {
+// `loop` repeats the input for as long as `total` asks for — that is what turns one 7.2s window into
+// a full-length reel — and `-t` is what stops the otherwise endless input.
+async function encodeReel(video, clip, total, outMp4, { loop = false } = {}) {
   const quality = IS_X26X ? ['-preset', PRESET, '-crf', CRF] : ['-b:v', BITRATE]
   await run(FFMPEG, [
-    '-y', '-i', webm, '-i', clip,
+    '-y', ...(loop ? ['-stream_loop', '-1'] : []), '-i', video, '-i', clip,
     '-map', '0:v:0', '-map', '1:a:0',
     '-vf', 'gradfun=strength=0.9:radius=16',
     '-r', String(FPS), '-vsync', 'cfr',
@@ -188,25 +236,39 @@ async function recordReels(course, { force = false, only = [] } = {}) {
       }
 
       // Incremental reuse: re-record iff missing/changed (or --force / --only match).
-      const fp = sha(JSON.stringify({ v: 1, audioHash, w: CW, h: CH, fps: FPS, tail: TAIL_MS, enc: ENCODE_SIG }))
+      const fp = sha(JSON.stringify({
+        v: 2, audioHash, w: CW, h: CH, fps: FPS, tail: TAIL_MS, enc: ENCODE_SIG, loop: LOOP_SIG,
+      }))
       if (!(force || !existsSync(outMp4) || readJson(sidecar)?.fp !== fp)) {
         console.log(`  §${n} ${sec.id}  reuse`)
         made.push(outMp4)
         continue
       }
 
+      // Loop capture rolls for the WINDOW (lead + whole pulse periods + guard) and lets the encode
+      // repeat it over the reel; NO_LOOP holds for the whole clip + tail as it used to.
       const total = dur + TAIL_MS / 1000
+      const roll = NO_LOOP ? total : LEAD_S + LOOP_S + GUARD_S
       await gotoSection(page, appBase, sec.slug)
 
       const webm = join(tmp, `${pad2(n)}-${sec.id}.webm`)
       const recorder = await page.screencast({ path: webm })
       await startKeepalive(page)
-      console.log(`  §${n} ${sec.id}  ▶ record (${dur.toFixed(1)}s)`)
-      await sleep(Math.round(total * 1000))
+      console.log(`  §${n} ${sec.id}  ▶ record ${NO_LOOP
+        ? `${dur.toFixed(1)}s`
+        : `${roll.toFixed(1)}s window → ${dur.toFixed(1)}s looped`}`)
+      await sleep(Math.round(roll * 1000))
       await recorder.stop()
       await stopKeepalive(page)
 
-      await encodeReel(webm, clip, total, outMp4)
+      // One exact, seamlessly-loopable window; -stream_loop repeats it to the reel's length.
+      let video = webm
+      if (!NO_LOOP) {
+        video = join(tmp, `${pad2(n)}-${sec.id}-loop.mp4`)
+        await makeLoopClip(webm, video)
+      }
+
+      await encodeReel(video, clip, total, outMp4, { loop: !NO_LOOP })
       writeFileSync(sidecar, JSON.stringify({ fp, builtAt: new Date().toISOString() }, null, 2))
       made.push(outMp4)
       console.log(`  §${n} ${sec.id}  ✓ reels/${tag}.mp4`)
