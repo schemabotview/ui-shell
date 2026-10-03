@@ -48,7 +48,7 @@ Read `README.md` first — it carries the integration, the three contracts and t
   explicit choice — only the absence is read differently, and this one never writes it back.
 - **The narration SCRUB BAR is landscape-only, and it takes the `<audio>` ELEMENT, not state.**
   `NarrationBar` sits between the two footer clusters (inside the same `!capture` footer, so a
-  recording can never show it). Two things fixed its shape:
+  recording can never show it). Three things fixed its shape:
   1. `timeupdate` fires ~4x a second. Lifting position into `ConceptApp` would re-render `SceneView`
      and the react-markdown slide four times a second for a 4px bar, so `useNarration` hands out the
      element and the bar subscribes to it directly. Nothing else in the shell learns that playback
@@ -59,6 +59,13 @@ Read `README.md` first — it carries the integration, the three contracts and t
      is sized for one row. Widening that reserve would re-frame every recorded reel, so the bar
      yields instead. Measured after the change: footer height 63px and scene bottom 862 < footer top
      869 at 430x932 — unchanged.
+  3. **The track's focus indicator is the THUMB, never an outline on the track.** A box round a
+     ~500px bar is a brand rectangle across the scene, and it appeared without the reader touching
+     the bar: Chrome promotes an already mouse-focused element to `:focus-visible` on the NEXT key
+     press, so click-scrub then Space (narration — a window-level shortcut unrelated to the bar) lit
+     it up and it stayed for the rest of the section. `:focus { outline: none }` plus a halo on the
+     10px thumb keeps keyboard focus visible at the size of the control. The ring stays on
+     `.reel-foot__ctrl`: those are 28px buttons where the box IS the control.
   A section with no clip (duration never resolves — docker, java) renders NO bar rather than a dead
   track; the volume toggle already carries that state. Arrow keys scrub only while the track has
   focus, and stop propagation so ConceptApp's window-level pager does not also fire; Esc and Space

@@ -323,13 +323,18 @@ body {
 .reel-foot__track:focus-visible .reel-foot__thumb {
   transform: translateY(-50%) scale(1);
 }
-.reel-foot__track:focus:not(:focus-visible) {
+/* THE FOCUS INDICATOR IS THE THUMB, NOT A BOX ROUND THE BAR. An outline on the track draws a brand
+   rectangle ~500px wide across the scene, and it showed up where nothing had been clicked: Chrome
+   promotes an ALREADY mouse-focused element to :focus-visible on the next key press, so a reader who
+   click-scrubbed and then pressed Space (narration — a window-level shortcut with nothing to do with
+   this bar) got the rectangle, and it stayed for the rest of the section. The thumb carries the same
+   information at the size of the control, so keyboard focus is still visible without painting the
+   frame. Keep the ring on `.reel-foot__ctrl` — those are 28px buttons where a box IS the control. */
+.reel-foot__track:focus {
   outline: none;
 }
-.reel-foot__track:focus-visible {
-  outline: 2px solid var(--brand);
-  outline-offset: 4px;
-  border-radius: 999px;
+.reel-foot__track:focus-visible .reel-foot__thumb {
+  box-shadow: 0 0 0 3px rgba(var(--ink-rgb), 0.3);
 }
 
 /* GraphL wordmark — top-left of the bare SCENE view; click or Esc → back to catalog. (The section
