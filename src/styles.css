@@ -228,11 +228,14 @@ body {
   -webkit-tap-highlight-color: transparent; /* no grey/blue tap flash on mobile */
 }
 /* Hover feedback only on real-pointer devices — on touch, :hover "sticks" after a tap and leaves the
-   icon highlighted until you tap elsewhere. */
+   icon highlighted until you tap elsewhere.
+   --brand, NOT --idx-accent: that token is declared on `.idx` (the catalog column) and does not
+   exist on a section, so every --idx-accent here resolved to nothing and the hover/focus accent was
+   silently dead. --brand is what .idx aliases it to anyway. */
 @media (hover: hover) {
   .reel-foot__ctrl:hover {
-    color: var(--idx-accent);
-    border-color: var(--idx-accent);
+    color: var(--brand);
+    border-color: var(--brand);
   }
 }
 /* Drop the focus ring on click/tap; keep a keyboard-only ring for accessibility. */
@@ -240,13 +243,93 @@ body {
   outline: none;
 }
 .reel-foot__ctrl:focus-visible {
-  outline: 2px solid var(--idx-accent);
+  outline: 2px solid var(--brand);
   outline-offset: 2px;
 }
 .reel-foot__count--live {
   pointer-events: none;
   min-width: 3.5em;
   text-align: center;
+}
+
+/* Narration scrub bar — the middle child of the control cluster (NarrationBar). LANDSCAPE ONLY: it
+   is `display: none` here and switched on in the landscape block below. In portrait the row is
+   already full at phone width (three controls + the pager leave ~60px), and the only other place to
+   put it is a second row — which would grow this absolutely-positioned footer UP into the frame,
+   since the portrait scene reserve (.stage--section .scene-area, bottom: 7.5vh) is sized for one
+   row. Widening that reserve would re-frame every recorded reel, so the bar yields instead. */
+.reel-foot__audio {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.reel-foot__time {
+  pointer-events: none;
+  min-width: 2.6em;
+  text-align: center;
+  font-size: 1.3vh;
+}
+/* The track is the hit target, so it gets vertical padding (a 4px line is not tappable) with the
+   visible rail drawn as a pseudo-element inside it. */
+.reel-foot__track {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  pointer-events: auto; /* the footer container is pointer-events:none */
+  touch-action: none; /* a drag scrubs; it must not scroll the page */
+  -webkit-tap-highlight-color: transparent;
+}
+.reel-foot__track::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(var(--ink-rgb), 0.16);
+}
+.reel-foot__fill {
+  position: relative;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--brand);
+  pointer-events: none;
+}
+.reel-foot__thumb {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border-radius: 50%;
+  background: var(--brand);
+  transform: translateY(-50%) scale(0);
+  transition: transform 0.12s;
+  pointer-events: none;
+}
+/* The thumb is an affordance, not decoration: it appears on hover/focus/scrub and otherwise the bar
+   reads as a thin progress line (the footer sits over the scene). */
+@media (hover: hover) {
+  .reel-foot__track:hover .reel-foot__thumb {
+    transform: translateY(-50%) scale(1);
+  }
+}
+.reel-foot__track:active .reel-foot__thumb,
+.reel-foot__track:focus-visible .reel-foot__thumb {
+  transform: translateY(-50%) scale(1);
+}
+.reel-foot__track:focus:not(:focus-visible) {
+  outline: none;
+}
+.reel-foot__track:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 4px;
+  border-radius: 999px;
 }
 
 /* GraphL wordmark — top-left of the bare SCENE view; click or Esc → back to catalog. (The section
@@ -377,6 +460,13 @@ body {
   .reel-foot {
     right: 42%;
     padding: 0 1.9vw 2.6vh;
+  }
+  /* The scene column is wide enough for the scrub bar between the two clusters (see the
+     portrait-only note on .reel-foot__audio). */
+  .reel-foot__audio {
+    display: flex;
+    flex: 1 1 auto;
+    margin: 0 1.4vw;
   }
   /* Scene reserve is portrait-only; in landscape the scene-area is the full-height flex column. */
   .stage--section .scene-area {

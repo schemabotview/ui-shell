@@ -11,6 +11,10 @@ import { useEffect, useRef, useState } from 'react'
 // one clip per section (`<audioBase>/<section-id>.wav`) rather than per beat.
 export function useNarration(src: string | undefined, onEnded: () => void) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  // The same element, as state, purely so NarrationBar can subscribe to it once it exists. The bar
+  // reads position straight off the element rather than through this hook's state, so a ~4Hz
+  // `timeupdate` never re-renders the section (see NarrationBar).
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null)
   const endedRef = useRef(onEnded)
   endedRef.current = onEnded
   const [playing, setPlaying] = useState(false)
@@ -23,6 +27,7 @@ export function useNarration(src: string | undefined, onEnded: () => void) {
     // A clip that can't load (not generated yet, 404) must not leave a stale "playing" state.
     a.addEventListener('error', () => setPlaying(false))
     audioRef.current = a
+    setAudio(a)
     return () => a.pause()
   }, [])
 
@@ -62,5 +67,5 @@ export function useNarration(src: string | undefined, onEnded: () => void) {
     setPlaying(false)
   }
 
-  return { playing, toggle, stop }
+  return { playing, toggle, stop, audio }
 }

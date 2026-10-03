@@ -46,6 +46,27 @@ Read `README.md` first — it carries the integration, the three contracts and t
      look is not the same decision as letting it repaint a directory page.
   The stored VALUES stay identical (`light`/`dark`/absent), so the two apps never disagree about an
   explicit choice — only the absence is read differently, and this one never writes it back.
+- **The narration SCRUB BAR is landscape-only, and it takes the `<audio>` ELEMENT, not state.**
+  `NarrationBar` sits between the two footer clusters (inside the same `!capture` footer, so a
+  recording can never show it). Two things fixed its shape:
+  1. `timeupdate` fires ~4x a second. Lifting position into `ConceptApp` would re-render `SceneView`
+     and the react-markdown slide four times a second for a 4px bar, so `useNarration` hands out the
+     element and the bar subscribes to it directly. Nothing else in the shell learns that playback
+     has a position.
+  2. In PORTRAIT it is `display: none`. The control row is already full at phone width, and the only
+     other place for it is a second row — which would grow this absolutely-positioned footer UP into
+     the frame, because the portrait scene reserve (`.stage--section .scene-area`, `bottom: 7.5vh`)
+     is sized for one row. Widening that reserve would re-frame every recorded reel, so the bar
+     yields instead. Measured after the change: footer height 63px and scene bottom 862 < footer top
+     869 at 430x932 — unchanged.
+  A section with no clip (duration never resolves — docker, java) renders NO bar rather than a dead
+  track; the volume toggle already carries that state. Arrow keys scrub only while the track has
+  focus, and stop propagation so ConceptApp's window-level pager does not also fire; Esc and Space
+  are left to bubble.
+- **`--idx-accent` does not exist on a section.** It is declared on `.idx` — the catalog column — so
+  every `var(--idx-accent)` in the `.reel-foot*` rules resolved to nothing and the control hover
+  colour and focus ring were silently dead. Those now use `--brand`, which is what `.idx` aliases it
+  to. `.slide-toggle` (lines above) still has the same dead token and was left alone.
 - **The toggle is now a FOURTH thing that must land in all three site bars.** `ThemeToggle` +
   `.site__icon` + `.theme-swap` exist here and at ui-graphl; python-lab's hand-port does NOT have it
   yet, so the bar currently differs across the three. See the site-bar invariant below.

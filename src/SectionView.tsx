@@ -3,6 +3,7 @@ import { Home, Volume2, VolumeX, ChevronLeft, ChevronRight, Moon, Sun } from 'lu
 import { SceneView, type ThemeKey } from '@graphlearning/flow'
 import type { Section, SceneLookup } from './types'
 import { SlidePanel } from './SlidePanel'
+import { NarrationBar } from './NarrationBar'
 
 // The SECTION view = the final composited output of a slug (course-section): the vertical scene +
 // the fixed-right slide, with an eyebrow + section title header. Layout is responsive (CSS):
@@ -27,6 +28,7 @@ export function SectionView({
   onNext,
   narrating = false,
   onToggleNarration,
+  narrationAudio = null,
   theme = 'dark',
   onToggleTheme,
 }: {
@@ -41,6 +43,10 @@ export function SectionView({
   onNext?: () => void // next section (same as → key)
   narrating?: boolean // is the section clip currently playing (drives the volume icon)
   onToggleNarration?: () => void // play/pause narration (same as Space)
+  // The narration channel's <audio>, handed straight to NarrationBar so playback position never
+  // becomes React state up here — a 4Hz tick would re-render the scene and the slide. Absent (or a
+  // section with no clip) → no bar.
+  narrationAudio?: HTMLAudioElement | null
   // Forwarded straight to SceneView. Withheld from the barrel like the rest of SectionView, so the
   // only way a repo sets it is ConceptApp's prop — which is what keeps the scene pane and the
   // shell's chrome on one value.
@@ -99,6 +105,11 @@ export function SectionView({
               </button>
             )}
           </span>
+          {/* Scrub bar — landscape only (CSS). In portrait the control row is already full at phone
+              width, and the scene's bottom reserve (.stage--section .scene-area) is sized for ONE
+              row: a second row would grow the footer up into the reel frame, and widening the
+              reserve would re-frame every recorded portrait video. */}
+          <NarrationBar audio={narrationAudio} />
           <span className="reel-foot__nav">
             <button className="reel-foot__ctrl" onClick={onPrev} aria-label="Previous section (←)" title="Previous section (←)">
               <ChevronLeft size={19} />

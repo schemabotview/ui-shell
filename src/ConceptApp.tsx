@@ -177,7 +177,7 @@ export function ConceptApp({
   const audioUrl = match
     ? `${audioBase}audio/${activeCourse.id}/${match.section.id}.wav`
     : undefined
-  const { playing, toggle, stop } = useNarration(audioUrl, () => {
+  const { playing, toggle, stop, audio } = useNarration(audioUrl, () => {
     const cur = location.hash.replace(/^#\/?/, '')
     const idx = globalSections.findIndex(({ slug }) => slug === cur)
     const next = globalSections[idx + 1] // rolls across course boundaries into the next chapter
@@ -233,6 +233,7 @@ export function ConceptApp({
         onNext={() => go(1)}
         narrating={playing}
         onToggleNarration={toggle}
+        narrationAudio={audio}
         theme={activeTheme}
         // Suppressed under capture by SectionView's own !capture guard, but passed as undefined here
         // too so the button is not even constructed for a recording.
