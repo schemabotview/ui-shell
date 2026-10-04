@@ -15,7 +15,8 @@ import { NarrationBar } from './NarrationBar'
 // interactive controls (the drawer toggle and the footer control bar are both suppressed).
 // Interactively, a footer control bar carries Home + narration + prev/next (raised above the drawer
 // so it works while the slide is open), the drawer toggle appears in portrait, and the eyebrow also
-// links back to the catalog. Keyboard works everywhere (← / → navigate, Space toggles narration).
+// links back to the catalog. Keyboard works everywhere (← / → seek the narration ±10s, or page when
+// the section has no clip; Shift+← / → always page; Space toggles narration).
 export function SectionView({
   section,
   getScene,
@@ -39,8 +40,8 @@ export function SectionView({
   index?: number // 0-based position of this section in the course
   total?: number // total sections in the course
   onHome?: () => void // back to the catalog (wired to the eyebrow)
-  onPrev?: () => void // previous section (same as ← key) — drives the footer nav
-  onNext?: () => void // next section (same as → key)
+  onPrev?: () => void // previous section (same as Shift+←) — drives the footer nav
+  onNext?: () => void // next section (same as Shift+→)
   narrating?: boolean // is the section clip currently playing (drives the volume icon)
   onToggleNarration?: () => void // play/pause narration (same as Space)
   // The narration channel's <audio>, handed straight to NarrationBar so playback position never
@@ -111,13 +112,13 @@ export function SectionView({
               reserve would re-frame every recorded portrait video. */}
           <NarrationBar audio={narrationAudio} />
           <span className="reel-foot__nav">
-            <button className="reel-foot__ctrl" onClick={onPrev} aria-label="Previous section (←)" title="Previous section (←)">
+            <button className="reel-foot__ctrl" onClick={onPrev} aria-label="Previous section (Shift+←)" title="Previous section (Shift+←)">
               <ChevronLeft size={19} />
             </button>
             <span className="reel-foot__count reel-foot__count--live">
               {index + 1} / {total}
             </span>
-            <button className="reel-foot__ctrl" onClick={onNext} aria-label="Next section (→)" title="Next section (→)">
+            <button className="reel-foot__ctrl" onClick={onNext} aria-label="Next section (Shift+→)" title="Next section (Shift+→)">
               <ChevronRight size={19} />
             </button>
           </span>

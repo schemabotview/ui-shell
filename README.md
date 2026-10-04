@@ -88,6 +88,23 @@ The recorder (`scripts/record-course.mjs` in each content repo) drives these, so
 - `?capture=1` — suppress every interactive control, leaving a clean frame
 - `window.__scene.plan()` — the active course's sections, for the recorder to walk
 
+## Keyboard
+
+Interactive only — `?capture=1` suppresses nothing here because none of it fires without a reader.
+
+| Key | What it does |
+| --- | --- |
+| `←` / `→` | seek the narration −10s / +10s **when the section has a clip** (exactly when the scrub bar is on screen); otherwise page to the previous/next section |
+| `Shift`+`←` / `→` | always page, clip or no clip |
+| `Space` | play/pause the narration |
+| `Esc` | back to the catalog (and from the catalog, up to graphl.in) |
+| `←` / `→` / `Home` / `End` | with the scrub bar focused: seek ∓10s / to the start / to the end |
+
+The arrows seek rather than page because the footer's `‹` `›` buttons are the pager's real home and
+`Esc` still leaves — while the only thing a *listening* reader has no control for is a 10s jump.
+Where there is no clip to seek (the catalog, a bare scene view, a repo whose wavs are not generated
+yet) the old paging meaning stands, so the keyboard never goes dead.
+
 ## Develop
 
 `npm run dev` serves a fixture harness on :5176 — two throwaway courses with a diagram scene, a code

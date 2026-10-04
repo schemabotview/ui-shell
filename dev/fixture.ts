@@ -53,7 +53,7 @@ export const COURSES: Record<string, Course> = {
         scene: 'fx-flow',
         slide: slide(
           'A diagram scene',
-          'The scene is a **react-flow diagram**, laid out entirely by the engine.\n\n### What to check\n— The eyebrow reads `FIXTURE · ALPHA` in `--brand`\n— This `###` heading is in `--accent-2`\n— `inline code` sits on the slide surface\n\n### And the controls\n— `←` / `→` walk sections, `Space` toggles narration\n— The footer pager shows `1 / 3`',
+          'The scene is a **react-flow diagram**, laid out entirely by the engine.\n\n### What to check\n— The eyebrow reads `FIXTURE · ALPHA` in `--brand`\n— This `###` heading is in `--accent-2`\n— `inline code` sits on the slide surface\n\n### And the controls\n— `←` / `→` seek narration ±10s (no clip → walk sections), `Shift`+`←` / `→` always walk, `Space` toggles narration\n— The footer pager shows `1 / 3`',
         ),
         narration: 'A diagram scene, laid out by the engine.',
       },

@@ -13,6 +13,11 @@ import { useEffect, useRef, useState } from 'react'
 //
 // A section whose clip is missing or not generated yet (docker, java) has no duration, so the bar
 // renders NOTHING rather than a dead track — the volume toggle already carries that state.
+// The scrub step, in seconds — shared with ConceptApp's window-level ← / →, which seeks by the same
+// amount when a clip is loaded. One constant so the key does the same thing whether or not the track
+// happens to hold focus.
+export const SEEK_S = 10
+
 export function NarrationBar({ audio }: { audio: HTMLAudioElement | null }) {
   const [time, setTime] = useState(0)
   const [duration, setDuration] = useState(0)
@@ -44,9 +49,10 @@ export function NarrationBar({ audio }: { audio: HTMLAudioElement | null }) {
     setTime(audio.currentTime) // don't wait for the next timeupdate — the thumb must track the finger
   }
 
-  // Arrow keys scrub when the bar HAS FOCUS and must not also page the section: ConceptApp's ← / →
-  // handler is on `window`, so stopping propagation here keeps it from firing. Every other key
-  // (Esc home, Space narration) is left to bubble.
+  // Arrow keys scrub by the same SEEK_S as the window-level handler; stopping propagation keeps
+  // ConceptApp from ALSO seeking the same clip (it would double the step) and keeps Shift+← / →
+  // from paging out of a section the reader is actively scrubbing. Every other key (Esc home, Space
+  // narration) is left to bubble. Home/End are handled only here, where the track has focus.
   const onKeyDown = (e: React.KeyboardEvent) => {
     const step = (d: number) => {
       e.preventDefault()
@@ -54,8 +60,8 @@ export function NarrationBar({ audio }: { audio: HTMLAudioElement | null }) {
       audio.currentTime = Math.min(duration, Math.max(0, audio.currentTime + d))
       setTime(audio.currentTime)
     }
-    if (e.key === 'ArrowLeft') step(-5)
-    else if (e.key === 'ArrowRight') step(5)
+    if (e.key === 'ArrowLeft') step(-SEEK_S)
+    else if (e.key === 'ArrowRight') step(SEEK_S)
     else if (e.key === 'Home') step(-duration)
     else if (e.key === 'End') step(duration)
   }

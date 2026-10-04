@@ -7,6 +7,7 @@ import { CourseIndex } from './CourseIndex'
 import { useNarration } from './useNarration'
 import { useTheme } from './useTheme'
 import { ThemeToggle } from './ThemeToggle'
+import { SEEK_S } from './NarrationBar'
 
 // Route contract (hash routing):
 //   #/<course-section>  → SECTION view — the final composited output of a slug (scene bg + slide)
@@ -143,16 +144,6 @@ export function ConceptApp({
     },
     [sections, globalSections],
   )
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return
-      e.preventDefault()
-      go(e.key === 'ArrowRight' ? 1 : -1)
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [go])
-
   // Back to the catalog: clear the hash (empty hash → CourseIndex). No-ops when already there. Wired
   // to the top-left GraphL brand AND the Esc key (below), so any inner page is one gesture from home.
   const goHome = useCallback(() => {
@@ -184,6 +175,35 @@ export function ConceptApp({
     if (next) location.hash = `#/${next.slug}`
     else stop() // last section of the whole catalog — nothing to advance to
   })
+
+  // ← / → : SCRUB the narration when this section has a clip, PAGE when it does not. The footer's
+  // < > buttons are the pager's real home and Esc still leaves, so the arrows are free to do the
+  // thing a LISTENER reaches for — a ±SEEK_S step, the convention every podcast and video player
+  // already taught them. The gate is the clip's duration, which makes the rule visible rather than
+  // modal: the arrows scrub exactly when the scrub bar is on screen. Where there is nothing to
+  // scrub the old meaning stands, so the keyboard never goes dead — the catalog, a bare scene view,
+  // a section whose wav 404s, and a whole repo with no narration yet (docker, java) all still page.
+  // SHIFT forces the pager even mid-clip, so a listener is never stranded without a key for it.
+  //
+  // Position is read straight off the element, like NarrationBar — it never becomes React state, so
+  // a seek re-renders the bar alone and not SceneView + the markdown slide.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return
+      const t = e.target as HTMLElement | null
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
+      const dir = e.key === 'ArrowRight' ? 1 : -1
+      e.preventDefault()
+      const d = audio?.duration ?? 0 // NaN/Infinity while a clip loads, or when none is loaded
+      if (audio && !e.shiftKey && Number.isFinite(d) && d > 0) {
+        audio.currentTime = Math.min(d, Math.max(0, audio.currentTime + dir * SEEK_S))
+        return
+      }
+      go(dir)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [go, audio])
 
   // SPACE enables/disables narration. Re-bound every render (no deps) so it always sees the current
   // `toggle`; guarded so it never hijacks the spacebar while typing in an input.

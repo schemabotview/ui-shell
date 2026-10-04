@@ -67,9 +67,19 @@ Read `README.md` first — it carries the integration, the three contracts and t
      10px thumb keeps keyboard focus visible at the size of the control. The ring stays on
      `.reel-foot__ctrl`: those are 28px buttons where the box IS the control.
   A section with no clip (duration never resolves — docker, java) renders NO bar rather than a dead
-  track; the volume toggle already carries that state. Arrow keys scrub only while the track has
-  focus, and stop propagation so ConceptApp's window-level pager does not also fire; Esc and Space
-  are left to bubble.
+  track; the volume toggle already carries that state — and that same duration gate now decides what
+  the window-level arrows mean (next invariant). The track's own arrows stop propagation so the
+  window handler does not step the SAME clip a second time; Esc and Space are left to bubble.
+- **← / → belong to the NARRATION, not the pager — when there is a clip.** A section with a loaded
+  clip seeks ∓10s; everything else (the catalog, a bare scene view, a section whose wav 404s, a repo
+  with no narration yet) still pages, and `Shift`+arrow always pages. The gate is the clip's
+  duration, which is the same gate `NarrationBar` renders on — so the rule is *visible*: the arrows
+  scrub exactly when the bar is on screen, never a hidden mode. What made the trade payable is that
+  the pager already had two other controls (the footer `‹` `›`, and `Esc` out) while a listener had
+  none; `SEEK_S` lives in `NarrationBar` and is shared, so the focused-track arrows and the
+  window-level ones cannot drift to different step sizes. The track's own handler still
+  `stopPropagation`s — with both handlers live on the same clip it would otherwise step TWICE.
+  The footer pager's labels say `Shift+←` / `Shift+→` because that is the binding that always works.
 - **`--idx-accent` does not exist on a section.** It is declared on `.idx` — the catalog column — so
   every `var(--idx-accent)` in the `.reel-foot*` rules resolved to nothing and the control hover
   colour and focus ring were silently dead. Those now use `--brand`, which is what `.idx` aliases it
