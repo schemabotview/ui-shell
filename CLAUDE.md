@@ -1,4 +1,8 @@
-# CLAUDE.md — ui-shell
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+# ui-shell
 
 The concept-app shell, published as `@graphlearning/shell`. Extracted from the seven content repos
 on 2026-09-19, the same way the render engine was extracted into `ui-flow`.
@@ -9,6 +13,26 @@ Read `README.md` first — it carries the integration, the three contracts and t
 
 `ui-flow` draws a scene. **This draws everything else**: the router, the section composition
 (scene left / slide right), the slide panel, the catalog, the narration channel, the stylesheet.
+
+## Commands
+
+```bash
+npm run dev     # fixture harness on :5176 — the review surface for any shell change
+npm run build   # vite lib build → dist/index.js, then tsc → dist/index.d.ts, then cp styles.css
+npm run watch   # vite build --watch, for use against a content repo on a file: install
+npx tsc --noEmit -p tsconfig.json   # typecheck only
+```
+
+**There is no test runner, no linter and no `npm run check` here** — the workspace `CLAUDE.md`
+names all three as the pre-handover guard, but in this repo only `npm run build` and
+`tsc --noEmit` exist. `build` already runs `tsc`, so it is the real gate; see the verification bar
+below for why a green build is a floor and not proof.
+
+`build` is three steps chained with `&&` and the third is a plain `cp` — `dist/styles.css` is
+copied, not bundled, so a `styles.css` edit does NOT reach a consumer until a build runs. A
+consumer on a `file:` install sees `src/` changes only through `dist/`.
+
+Port 5176 is deliberate: 5173 is a content repo, 5174 is `ui-flow`, and all three run side by side.
 
 ## Invariants
 
@@ -22,16 +46,23 @@ Read `README.md` first — it carries the integration, the three contracts and t
   `ConceptApp` — there is nothing in it to compose differently.
 - **No build-time magic.** `import.meta.env` cannot be read here (see README, contract 3). Anything
   that depends on the consuming app's vite config arrives as a prop.
-- **The engine is a peer.** Never a dependency — one engine copy per app, pinned by the app.
+- **The engine is a peer.** Never a dependency — one engine copy per app, pinned by the app. The
+  vite `external` list is load-bearing for the same reason: bundling `@graphlearning/flow` would
+  put a second engine (and a second react-flow store) inside this package.
 - **`theme` is the DECK's declared look; the READER may override it, and capture ignores the reader.**
-  `ConceptApp` takes `theme?: 'dark' | 'light'` and forwards it to every `SceneView`. A reader can
+  `ConceptApp` takes `theme?: 'dark' | 'light'` and forwards it to every `SceneView`. One value,
+  because a light scene inside dark chrome is a white rectangle on a dark page. A reader can
   override it from a toggle in TWO places, both of which are suppressed at capture: `SiteHeader` (the
   catalog page — SiteHeader never renders on a section) and the section's own footer control bar,
   which already exists as an interactive-only cluster behind `!capture` alongside Home, narration and
   the pager. So the control can never appear in a captured frame from either route. The two render
   differently on purpose: the bar uses a text glyph because it is a character-for-character port of
-  ui-graphl, the footer uses lucide because every sibling in that cluster is lucide. `?capture=1` pins to the declared prop and ignores stored choice entirely; without that pin
-  a 4K capture would depend on whoever last used the browser.
+  ui-graphl, the footer uses lucide because every sibling in that cluster is lucide. `?capture=1`
+  pins to the declared prop and ignores stored choice entirely; without that pin a 4K capture would
+  depend on whoever last used the browser. Consequence of a repo going light: it must ALSO re-pick
+  `--brand` / `--brand-hover` / `--accent-2` — a brand tuned to glow on slate can fall under 3:1 on
+  off-white, and the shell cannot repick those without taking ownership of the one surface it
+  deliberately leaves to the repo.
 - **The reader's choice IS the platform's.** Key `graphl:theme`, values `light`/`dark`/absent,
   switch `data-theme` on `<html>` — the same four things ui-graphl/theme.js owns, because every
   GraphL app is same-origin under graphl.in and a reader who picks light on the catalog should walk
@@ -46,6 +77,9 @@ Read `README.md` first — it carries the integration, the three contracts and t
      look is not the same decision as letting it repaint a directory page.
   The stored VALUES stay identical (`light`/`dark`/absent), so the two apps never disagree about an
   explicit choice — only the absence is read differently, and this one never writes it back.
+- **The attribute goes on `<html>`, not a wrapper.** `ConceptApp` renders a fragment; adding a
+  wrapping element would change the section view's box model, which is burned into every recorded
+  video. An attribute costs no layout.
 - **The narration SCRUB BAR is landscape-only, and it takes the `<audio>` ELEMENT, not state.**
   `NarrationBar` sits between the two footer clusters (inside the same `!capture` footer, so a
   recording can never show it). Three things fixed its shape:
@@ -80,24 +114,20 @@ Read `README.md` first — it carries the integration, the three contracts and t
   window-level ones cannot drift to different step sizes. The track's own handler still
   `stopPropagation`s — with both handlers live on the same clip it would otherwise step TWICE.
   The footer pager's labels say `Shift+←` / `Shift+→` because that is the binding that always works.
+- **Section nav walks the GLOBAL stream, the header counter does not.** `globalSections` (every
+  course flattened in `COURSES` insertion order) drives `go()` and the narration's auto-advance, so
+  → past a course's last section enters the next course's first and narration flows chapter to
+  chapter. The per-course `sections` still drives the capture plan and the §n/N header, which stay
+  chapter-relative. Only the two ends of the whole catalog fall back to the catalog page.
+- **A bare course id in the hash redirects, except under capture.** The GraphL catalog links each
+  course to `<slug>/#/<courseId>`, so a human landing there is `replaceState`d into the course's
+  first section — but the recorder deliberately lands on `#/<course>` to read
+  `window.__scene.plan()`, so the redirect is guarded by `!capture`. Breaking that guard breaks
+  every recorder.
 - **`--idx-accent` does not exist on a section.** It is declared on `.idx` — the catalog column — so
   every `var(--idx-accent)` in the `.reel-foot*` rules resolved to nothing and the control hover
   colour and focus ring were silently dead. Those now use `--brand`, which is what `.idx` aliases it
   to. `.slide-toggle` (lines above) still has the same dead token and was left alone.
-- **The toggle is now a FOURTH thing that must land in all three site bars.** `ThemeToggle` +
-  `.site__icon` + `.theme-swap` exist here and at ui-graphl; python-lab's hand-port does NOT have it
-  yet, so the bar currently differs across the three. See the site-bar invariant below.
-- *(superseded)* `theme` is DECK-level and never a viewer toggle. `ConceptApp` takes `theme?: 'dark' | 'light'`,
-  forwards it to every `SceneView`, and sets `data-theme` on `<html>` for the shell's own light token
-  block. One value, because a light scene inside dark chrome is a white rectangle on a dark page. It
-  is deliberately OUTSIDE the route contract: a deck is a video, and a recorded frame that depended on
-  `prefers-color-scheme` would capture differently on two laptops. A repo sets it once in `main.tsx`.
-  Consequence: a repo going light must ALSO re-pick `--brand` / `--brand-hover` / `--accent-2` — a
-  brand tuned to glow on slate can fall under 3:1 on off-white, and the shell cannot repick those
-  without taking ownership of the one surface it deliberately leaves to the repo.
-- **The attribute goes on `<html>`, not a wrapper.** `ConceptApp` renders a fragment; adding a
-  wrapping element would change the section view's box model, which is burned into every recorded
-  video. An attribute costs no layout.
 - **`--ink-rgb` is why light was additive.** ~20 `rgba(255,255,255,a)` literals in `styles.css` were
   all "ink at some alpha", so parameterising the CHANNELS converts every one by substitution and
   leaves dark byte-identical — one token instead of eleven alpha tokens. `--line`, `--header-bg`,
@@ -106,6 +136,9 @@ Read `README.md` first — it carries the integration, the three contracts and t
 - **`eyebrow` is a prop, not a derivation.** It is burned into every recorded video, and two repos
   brand themselves differently from their title (`Apache Spark` → `SPARK`,
   `Databricks Data Engineer` → `DATABRICKS`).
+- **The toggle is a FOURTH thing that must land in all three site bars.** `ThemeToggle` +
+  `.site__icon` + `.theme-swap` exist here and at ui-graphl; python-lab's hand-port does NOT have it
+  yet, so the bar currently differs across the three. See the site-bar invariant below.
 - **The site bar exists THREE times on purpose**, and they only stay one design if every change
   lands in all three:
   1. `ui-graphl/index.html` + `styles.css` — the original. Buildless vanilla, so it can never
@@ -132,7 +165,8 @@ Read `README.md` first — it carries the integration, the three contracts and t
 
 No test runner, same as the rest of the workspace: `npm run build` clean **and** the fixture harness
 (`npm run dev`, :5176) visually correct — the diagram scene, the code scene, the missing-scene
-fallback, and `→` crossing the Alpha→Beta course boundary.
+fallback, and `→` crossing the Alpha→Beta course boundary. Two fixture courses, not one, because
+that boundary is the only way to exercise the global section stream.
 
 For a change that could move pixels, that bar is not enough: screenshot a content repo before and
 after and diff. **The capture noise floor is ~0.18% of pixels** (GPU compositing and fitView timing
@@ -141,19 +175,22 @@ vary run to run), so a diff only means something when compared against a same-bu
 ## Scenes and content stay in the repos
 
 This package owns no scenes and no courses. `getScene` and `courses` are injected. `Section` and
-`Course` live here because the shell renders them, and every repo's copy was byte-identical.
+`Course` live in `src/types.ts` because the shell renders them, and every repo's copy was
+byte-identical.
 
 ## The scripts
 
 They live here because they drive the route contract this package defines — see README for the
-roots (`repoDir` / `dataDir` / `pkgDir`), `loadPeer`, and `concept.json`.
+roots (`repoDir` / `dataDir` / `pkgDir`), `loadPeer`, and `concept.json`. They are `bin` entries,
+run from a content repo's root (never from here — `_paths.mjs` exits if cwd has no `package.json`).
 
 **Loop capture (both recorders).** A section is screencast for ONE short window — `LEAD_S` of
 discarded ramp-up + `LOOP_CYCLES × PULSE_S` (one 2.4s period by default) + a guard — which is
 normalized to an exact CFR clip and repeated over the narration's length by `-stream_loop -1`,
-bounded by `-t total`. It rests on the engine: the edge pulse (`FlowEdge`, `animateMotion dur="2.4s"`) is the only motion in a frame, so the
-composition is periodic with a 2.4s period and any whole multiple of it joins back onto itself —
-whatever phase the recording started in. Hence two rules:
+bounded by `-t total`. It rests on the engine: the edge pulse (`FlowEdge`,
+`animateMotion dur="2.4s"`) is the only motion in a frame, so the composition is periodic with a
+2.4s period and any whole multiple of it joins back onto itself — whatever phase the recording
+started in. Hence these rules:
 
 - **The window must be a whole multiple of `PULSE_S`.** `LOOP_MS` / `LOOP_CYCLES` are snapped for
   exactly this reason. Measured on a 48s `models` segment: with a snapped window the frame-to-frame
@@ -202,3 +239,11 @@ Three traps, all found the hard way during the extraction:
 Run the pre-extraction script from git (`git show HEAD:scripts/<x>.mjs`) and the new one, and diff
 the outputs. `gen:desc` is the cheap one — no browser, and it exercises the content registry, the
 config and the path roots at once.
+
+## Known doc drift
+
+- README's peer-dependency section still quotes the engine range as `>=0.5.0 <1.0.0`;
+  `package.json` has said `>=0.8.0 <2.0.0` since flow went 1.x. The reasoning around it is current.
+- The `graphl-capture-shots` bin (`scripts/capture-shots.mjs`) is not in README's toolchain table.
+- The workspace `CLAUDE.md` lists `npm run check` among the pre-handover guards; no such script
+  exists here (see Commands).
