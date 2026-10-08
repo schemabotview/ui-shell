@@ -130,11 +130,26 @@ They are `bin` entries, wired through each repo's `npm run`:
 | command | what it does |
 |---|---|
 | `npm run record` | one course → a 3840×2160 MP4 |
+| `npm run record:all` | every course in syllabus order, waiting for narration to land |
 | `npm run record:reels` | one course → portrait reels |
 | `npm run shots:4k` | one PNG per section, no ffmpeg |
 | `npm run thumb` | a branded YouTube thumbnail |
 | `npm run gen:desc` | video descriptions + chapters |
 | `npm run gen:audio` | the narration manifest |
+
+`record:all` is the only one whose repo script is not just the bin: it needs a sleep wrapper, because
+a full concept is a multi-hour batch and the machine going idle mid-run kills it.
+
+```json
+"record:all": "caffeinate -ims graphl-record-all"
+```
+
+It exists because narration arrives DURING a batch — the Colab + Chatterbox pass commits wavs one
+section at a time — so before each course it pulls the repo's branch and counts that course's wavs
+against `scripts/audio-manifest.json`, waiting (`--wait`, default 240 min) for the missing ones.
+A course is recorded only when it is complete; an incomplete one is skipped and named in the summary
+rather than half-recorded into `record`'s 3s-silence fallback. Re-running is cheap — finished courses
+are segment-cache hits.
 
 **Capture is not realtime.** `record` and `record:reels` screencast one short window per section and
 loop it over the narration (`-stream_loop`), because the only moving thing in a frame is the engine's

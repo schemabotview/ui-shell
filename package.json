@@ -1,6 +1,6 @@
 {
   "name": "@graphlearning/shell",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "The GraphL concept-app shell — hash router, section view (scene left / slide right), slide panel, course catalog and narration channel, plus the capture/record/publish toolchain that drives them. A content repo supplies courses + scenes.",
   "license": "UNLICENSED",
   "repository": {
@@ -53,6 +53,7 @@
   },
   "bin": {
     "graphl-record": "scripts/record-course.mjs",
+    "graphl-record-all": "scripts/record-all.mjs",
     "graphl-record-reels": "scripts/record-reels.mjs",
     "graphl-shots-4k": "scripts/shots-4k.mjs",
     "graphl-capture-shots": "scripts/capture-shots.mjs",

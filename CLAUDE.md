@@ -184,6 +184,28 @@ They live here because they drive the route contract this package defines — se
 roots (`repoDir` / `dataDir` / `pkgDir`), `loadPeer`, and `concept.json`. They are `bin` entries,
 run from a content repo's root (never from here — `_paths.mjs` exits if cwd has no `package.json`).
 
+**`record-all.mjs` is a batch over `record-course.mjs`**, uplifted from apache-spark and
+system-design on 2026-10-08 (it had been an untracked local file in both, never committed — so this
+is also the first time it is under version control). Three things about it are deliberate:
+
+- **It spawns `record-course.mjs` directly** (`process.execPath` + `pkgDir`), not `npm run record`.
+  `pkgDir` is the correct root here precisely because the recorder is package-owned — the
+  `import.meta.url` trap below is about repo DATA. Going direct also drops an npm layer between the
+  batch and ffmpeg/puppeteer for `SIGINT` to cross, and means the batch does not require the
+  consuming repo to have declared a `record` script.
+- **The git branch is read, not assumed.** Both origin copies hardcoded `origin main`; a packaged
+  script cannot, because not every repo records from `main` (aws-lab sits on `rebuild/atom-library`).
+  A detached HEAD skips the pull rather than guessing, and the probe swallows git's own stderr so a
+  non-repo does not print `fatal:` ahead of the friendly note.
+- **`caffeinate` stays in the repo's npm script**, not inside this file. It is macOS-only, and
+  re-exec'ing under it would hide a process layer from whoever is reading a multi-hour batch's
+  output. The wiring is `"record:all": "caffeinate -ims graphl-record-all"`.
+
+A course is recorded only when every wav the manifest lists for it exists; the point of the whole
+script is that `record-course.mjs`'s 3s-silence fallback for a missing clip is right for one clip and
+wrong for a whole chapter, and a plain shell `for` loop over `npm run record` silently takes the
+latter.
+
 **Loop capture (both recorders).** A section is screencast for ONE short window — `LEAD_S` of
 discarded ramp-up + `LOOP_CYCLES × PULSE_S` (one 2.4s period by default) + a guard — which is
 normalized to an exact CFR clip and repeated over the narration's length by `-stream_loop -1`,
@@ -245,5 +267,7 @@ config and the path roots at once.
 - README's peer-dependency section still quotes the engine range as `>=0.5.0 <1.0.0`;
   `package.json` has said `>=0.8.0 <2.0.0` since flow went 1.x. The reasoning around it is current.
 - The `graphl-capture-shots` bin (`scripts/capture-shots.mjs`) is not in README's toolchain table.
+- `scripts/shots-4k.mjs` defaults its course argument to `'foundations'` — a content-repo name that
+  leaked into the package during the extraction. Harmless (every repo passes a course) but wrong here.
 - The workspace `CLAUDE.md` lists `npm run check` among the pre-handover guards; no such script
   exists here (see Commands).
