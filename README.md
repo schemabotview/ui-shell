@@ -192,23 +192,3 @@ hardcoded defaults in each repo's copy, which is precisely why they drifted:
 
 `concept` is the name used in descriptions; `kicker` is the thumbnail panel's label and defaults to
 `concept` — they differ only where a long name will not fit the panel (apache-spark).
-
-## Course-name headers (0.10.0)
-
-Section headers default to `CONCEPT · COURSE TITLE`. A repeated leading subject or eyebrow
-prefix is removed from the displayed title (`Linux` + `Linux Foundations` → `LINUX · FOUNDATIONS`).
-Catalog titles, IDs, URLs, and audio paths are unchanged. `eyebrow` still overrides the concept
-prefix. Pass `courseLabel="id"` to retain legacy ID-based headers, including existing recording
-layouts. Long titles wrap clear of the portrait slide toggle. Review existing captures before
-adopting the new default; no re-recording is implied.
-
-This source change has not been published to the package registry. Build and consume the local
-checkout for verification; publishing requires a separate request. Content repositories should
-remove header transforms/styles only when consuming this version or newer.
-
-Verification for this change (2026-10-09): `npm run build` passed; focused formatter checks
-(`node scripts/check-course-eyebrow.mjs`, Node 22.18+ required for TypeScript stripping) passed.
-The course-authoring-template sample passed six desktop/mobile section combinations and
-navigation checks; linux-authoring's Foundations preview passed fourteen combinations after
-removing its adapter. These checks do not establish complete accessibility or recording review.
-No package publication or video/audio generation occurred.
