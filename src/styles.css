@@ -378,6 +378,9 @@ body {
   pointer-events: none;
 }
 .reel-head__eyebrow {
+  max-width: 100%;
+  text-align: left;
+  overflow-wrap: anywhere;
   display: inline-block;
   margin: 0 0 1.6vh;
   padding: 0;
@@ -897,4 +900,9 @@ body {
   .idx {
     padding: 20px 20px 48px;
   }
+}
+
+/* Long course titles wrap before the portrait slide toggle. */
+@media (orientation: portrait) {
+  .stage--section .reel-head__eyebrow { max-width: calc(100% - 48px); }
 }

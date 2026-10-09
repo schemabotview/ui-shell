@@ -1,3 +1,4 @@
+import { courseEyebrow } from './courseEyebrow'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { SceneView, type ThemeKey } from '@graphlearning/flow'
 import { SectionView } from './SectionView'
@@ -17,6 +18,7 @@ import { SEEK_S } from './NarrationBar'
 export function ConceptApp({
   subject,
   eyebrow,
+  courseLabel = 'title',
   courses: COURSES,
   getScene,
   audioBase = '/',
@@ -30,6 +32,8 @@ export function ConceptApp({
   // sections "SPARK", databricks-data-engineer brands its "DATABRICKS". The eyebrow is burned into
   // every recorded video, so it gets its own prop rather than being derived and quietly changed.
   eyebrow?: string
+  // Display human-readable course titles by default; id preserves legacy recorded headers.
+  courseLabel?: 'title' | 'id'
   getScene: SceneLookup // the repo's scene registry
   // Where the narration wavs are served from — a content repo passes import.meta.env.BASE_URL,
   // which is its vite `base` ("/python/"). It CANNOT be read here: import.meta.env is replaced at
@@ -245,7 +249,7 @@ export function ConceptApp({
         // ?capture=1 suppresses the (interactive-only) drawer toggle so the recorded frame is clean.
         capture={capture}
         // Header eyebrow — subject · course; doubles as the back-to-catalog link.
-        eyebrow={`${eyebrow ?? subject.toUpperCase()} · ${activeCourse.id.toUpperCase()}`}
+        eyebrow={courseEyebrow(subject, eyebrow, activeCourse, courseLabel)}
         index={index}
         total={sections.length}
         onHome={goHome}
