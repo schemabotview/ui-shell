@@ -4,121 +4,81 @@ import { SceneView, type ThemeKey } from '@graphlearning/flow'
 import type { Section, SceneLookup } from './types'
 import { SlidePanel } from './SlidePanel'
 import { NarrationBar } from './NarrationBar'
+import { themeLabel } from './ThemeToggle'
 
-// The SECTION view = the final composited output of a slug (course-section): the vertical scene +
-// the fixed-right slide, with an eyebrow + section title header. Layout is responsive (CSS):
-//   landscape (laptop → 4K video)  — scene fills the left, slide is a right column; the title lives
-//                                    in the slide, so the header shows just the eyebrow.
-//   portrait  (mobile → reel)      — scene fills the frame, slide is a full-width drawer toggled at
-//                                    top-right; the header shows the full title card.
-// Under ?capture=1 the frame is clean for video: just the eyebrow + title + scene — NO footer and NO
-// interactive controls (the drawer toggle and the footer control bar are both suppressed).
-// Interactively, a footer control bar carries Home + narration + prev/next (raised above the drawer
-// so it works while the slide is open), the drawer toggle appears in portrait, and the eyebrow also
-// links back to the catalog. Keyboard works everywhere (← / → seek the narration ±10s, or page when
-// the section has no clip; Shift+← / → always page; Space toggles narration).
+const tip = (label: string) => ({ 'aria-label': label, title: label })
+
 export function SectionView({
   section,
   getScene,
-  capture = false,
+  capture,
   eyebrow,
-  index = 0,
-  total = 0,
+  index,
+  total,
   onHome,
   onPrev,
   onNext,
-  narrating = false,
+  narrating,
   onToggleNarration,
-  narrationAudio = null,
-  theme = 'dark',
+  narrationAudio,
+  theme,
   onToggleTheme,
 }: {
   section: Section
-  getScene: SceneLookup // the repo's scene registry, injected — the shell owns no scenes
-  capture?: boolean // ?capture=1: the footer shows GraphL + §n/N branding (video); else live controls
-  eyebrow?: string // header eyebrow (e.g. "PYTHON · SETUP"); also the back-to-catalog link
-  index?: number // 0-based position of this section in the course
-  total?: number // total sections in the course
-  onHome?: () => void // back to the catalog (wired to the eyebrow)
-  onPrev?: () => void // previous section (same as Shift+←) — drives the footer nav
-  onNext?: () => void // next section (same as Shift+→)
-  narrating?: boolean // is the section clip currently playing (drives the volume icon)
-  onToggleNarration?: () => void // play/pause narration (same as Space)
-  // The narration channel's <audio>, handed straight to NarrationBar so playback position never
-  // becomes React state up here — a 4Hz tick would re-render the scene and the slide. Absent (or a
-  // section with no clip) → no bar.
-  narrationAudio?: HTMLAudioElement | null
-  // Forwarded straight to SceneView. Withheld from the barrel like the rest of SectionView, so the
-  // only way a repo sets it is ConceptApp's prop — which is what keeps the scene pane and the
-  // shell's chrome on one value.
-  theme?: ThemeKey
-  // Flips the theme from the section itself. SiteHeader (and its toggle) never renders here — a
-  // section is a video frame — but the footer control bar is ALREADY interactive-only and suppressed
-  // under ?capture=1, exactly like the pager and the drawer handle beside it. So the control lands in
-  // the cluster that exists for precisely this: things a reader may touch and a recording never sees.
+  getScene: SceneLookup
+  capture: boolean
+  eyebrow: string
+  index: number
+  total: number
+  onHome: () => void
+  onPrev: () => void
+  onNext: () => void
+  narrating: boolean
+  onToggleNarration: () => void
+  narrationAudio: HTMLAudioElement | null
+  theme: ThemeKey
   onToggleTheme?: () => void
 }) {
-  const [open, setOpen] = useState(false) // drawer state; only affects the portrait layout
+  const [open, setOpen] = useState(false)
   const scene = getScene(section.scene)
   if (!scene) return <div className="stage stage--missing">no scene: {section.scene}</div>
+  const dark = theme === 'dark'
   return (
     <div className="stage stage--section">
-      {/* Header/footer — shared with the captured video. The eyebrow is a button (back to catalog);
-          the section title shows on the portrait title card and is hidden in landscape (it headlines
-          the slide there). GraphL + §n/N sit along the bottom. */}
       <header className="reel-head">
-        {eyebrow && (
-          <button className="reel-head__eyebrow" onClick={onHome} aria-label="Back to catalog (Esc)" title="Back to catalog (Esc)">
-            {eyebrow}
-          </button>
-        )}
+        <button className="reel-head__eyebrow" onClick={onHome} {...tip('Back to catalog (Esc)')}>
+          {eyebrow}
+        </button>
         <h1 className="reel-head__title">{section.title}</h1>
       </header>
-      {/* Footer control bar — interactive ONLY (narration toggle + prev/next + position). Suppressed
-          under ?capture=1 so the captured video frame stays clean: no GraphL wordmark, no counter,
-          just the eyebrow/title + scene. Raised above the portrait drawer so nav works while the
-          slide is open. */}
       {!capture && (
         <footer className="reel-foot reel-foot--controls">
           <span className="reel-foot__grp">
-            <button className="reel-foot__ctrl" onClick={onHome} aria-label="Back to catalog (Esc)" title="Back to catalog (Esc)">
+            <button className="reel-foot__ctrl" onClick={onHome} {...tip('Back to catalog (Esc)')}>
               <Home size={17} />
             </button>
             <button
               className="reel-foot__ctrl"
               onClick={onToggleNarration}
-              aria-label={narrating ? 'Pause narration (Space)' : 'Play narration (Space)'}
-              title={narrating ? 'Pause narration (Space)' : 'Play narration (Space)'}
+              {...tip(narrating ? 'Pause narration (Space)' : 'Play narration (Space)')}
             >
               {narrating ? <Volume2 size={18} /> : <VolumeX size={18} />}
             </button>
-            {/* Lucide here, a text glyph in SiteHeader's copy — deliberately. The bar is a port of
-                ui-graphl and must match it character for character; this cluster's siblings are all
-                lucide at 17-19px, and a text moon beside them would read as a different control. */}
             {onToggleTheme && (
-              <button
-                className="reel-foot__ctrl"
-                onClick={onToggleTheme}
-                aria-label={theme === 'dark' ? 'Dark theme. Switch to light theme.' : 'Light theme. Switch to dark theme.'}
-                title={theme === 'dark' ? 'Dark theme. Switch to light theme.' : 'Light theme. Switch to dark theme.'}
-              >
-                {theme === 'dark' ? <Moon size={17} /> : <Sun size={17} />}
+              <button className="reel-foot__ctrl" onClick={onToggleTheme} {...tip(themeLabel(theme))}>
+                {dark ? <Moon size={17} /> : <Sun size={17} />}
               </button>
             )}
           </span>
-          {/* Scrub bar — landscape only (CSS). In portrait the control row is already full at phone
-              width, and the scene's bottom reserve (.stage--section .scene-area) is sized for ONE
-              row: a second row would grow the footer up into the reel frame, and widening the
-              reserve would re-frame every recorded portrait video. */}
           <NarrationBar audio={narrationAudio} />
           <span className="reel-foot__nav">
-            <button className="reel-foot__ctrl" onClick={onPrev} aria-label="Previous section (Shift+←)" title="Previous section (Shift+←)">
+            <button className="reel-foot__ctrl" onClick={onPrev} {...tip('Previous section (Shift+←)')}>
               <ChevronLeft size={19} />
             </button>
             <span className="reel-foot__count reel-foot__count--live">
               {index + 1} / {total}
             </span>
-            <button className="reel-foot__ctrl" onClick={onNext} aria-label="Next section (Shift+→)" title="Next section (Shift+→)">
+            <button className="reel-foot__ctrl" onClick={onNext} {...tip('Next section (Shift+→)')}>
               <ChevronRight size={19} />
             </button>
           </span>
@@ -127,13 +87,8 @@ export function SectionView({
       <div className="scene-area">
         <SceneView scene={scene} focusId={section.focus} theme={theme} />
       </div>
-      {/* Drawer toggle — portrait-only affordance to reveal the slide; suppressed at capture. */}
       {!capture && (
-        <button
-          className="slide-toggle"
-          onClick={() => setOpen((o) => !o)}
-          aria-label={open ? 'Hide slide' : 'Show slide'}
-        >
+        <button className="slide-toggle" onClick={() => setOpen((o) => !o)} aria-label={open ? 'Hide slide' : 'Show slide'}>
           {open ? '›' : '‹'}
         </button>
       )}

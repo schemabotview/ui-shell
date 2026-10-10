@@ -1,103 +1,49 @@
-/* @graphlearning/shell — the concept-app stylesheet.
- *
- * Import ONCE in a content repo's main.tsx, and import it BEFORE the repo's own theme.css:
- *   import '@graphlearning/flow/styles.css'   // engine: react-flow + the IBM Plex faces
- *   import '@graphlearning/shell/styles.css'  // this file: the shell's layout + surface
- *   import './theme.css'                      // the repo: --brand / --brand-hover / --accent-2
- *
- * THE SHELL PAINTS THE CANVAS. ui-flow's SceneView draws its dots at #2a2f38 and assumes a dark
- * surface behind it; that surface (--bg) is defined here. This is the contract each content repo
- * used to re-declare by hand in its own index.css.
- */
-
 :root {
-  --bg: #1a1d23; /* Zed-slate (matches graphl-studio/aws) */
+  --bg: #1a1d23;
   --fg: #eceef2;
-  /* The foreground's RGB CHANNELS, so every `rgba(var(--ink-rgb), a)` in this file flips with the
-     theme. There were ~20 literal rgba(255,255,255,a) values here — all of them "ink at some alpha"
-     — and one token converts every one by substitution rather than needing eleven alpha tokens.
-     Dark keeps the exact values it always had. */
+
   --ink-rgb: 255, 255, 255;
-  /* Surfaces lifted OFF --bg: the slide panel, and a catalog card's hover. Literals before 0.4.0. */
+
   --surface-lift: #2f333d;
   --surface-lift-2: #22262e;
-  --slide-ink: #c8cdd6; /* the slide body's text colour */
-  --foot-dim: #5b616f; /* the capture footer's section counter */
-  --foot-dimmer: #4b515e; /* the catalog chevron at rest */
-  /* A SCRIM, not ink: the page colour at 90%, sat behind the floating controls so they stay legible
-     over whatever the scene puts under them. It has to follow --bg, so it cannot be alpha over
-     --ink-rgb like the rest — on light, ink-at-90% would be a near-black button. */
+  --slide-ink: #c8cdd6;
+  --foot-dim: #5b616f;
+  --foot-dimmer: #4b515e;
+
   --scrim: rgba(26, 29, 35, 0.9);
-  /* --- the three tokens a CONTENT REPO owns -------------------------------------------------
-     These are NEUTRAL DEFAULTS. Each repo overrides them in its own theme.css, imported AFTER
-     this stylesheet so the cascade lets the repo win. They are the entire per-repo design
-     surface — everything else in this file is identical for every concept.
-       --brand        the one accent: section eyebrow, slide title (h2), catalog accent, brand hover
-       --brand-hover  a lighter tint of --brand, for the eyebrow's hover state
-       --accent-2     a counter tone to --brand, for the slide's `###` subheading
-     Defaults rather than nothing: a repo that forgets theme.css renders in slate and is obviously
-     unbranded, instead of painting invalid colours and losing the text entirely. */
+
   --brand: #8b909c;
   --brand-hover: #a8adb8;
   --accent-2: #c8cdd6;
   --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
-  /* --- site-chrome tokens (SiteHeader) ------------------------------------------------------
-     The same names and the same values ui-graphl declares, so the bar is identical on the catalog
-     and inside every app. Do NOT rename them: when light mode arrives it is purely additive here
-     — a light :root plus prefers-color-scheme and [data-theme] blocks, same names — and the
-     header's own CSS never has to change again. --text aliases the shell's existing --fg (same
-     value) rather than duplicating the colour. These are PLATFORM tokens: the bar stays
-     platform-blue on every site, deliberately NOT --brand, because looking the same everywhere is
-     the whole reason it exists. */
   --text: var(--fg);
   --muted: #8b909c;
   --accent: #5b8cff;
-  --accent-soft: rgba(91, 140, 255, 0.14); /* the current nav item */
+  --accent-soft: rgba(91, 140, 255, 0.14);
   --line: rgba(var(--ink-rgb), 0.09);
   --header-bg: rgba(var(--ink-rgb), 0.014);
   --hover: rgba(var(--ink-rgb), 0.05);
-  --site-h: 60px; /* the bar's row height (its 1px rule is extra) — .idx subtracts it from 100vh */
+  --site-h: 60px;
 }
 
-/* LIGHT — same token NAMES, different values, exactly as the note above anticipated. Set by
-   ConceptApp on <html> from its `theme` prop; nothing selects on it but this block.
- *
- * WHY AN EXPLICIT ATTRIBUTE AND NOT prefers-color-scheme: a deck is a VIDEO. The recorded frame
- * cannot depend on the machine that renders it, or the same slug captures differently on two
- * laptops. The repo chooses the theme at build time and the recorder inherits it.
- *
- * --line / --header-bg / --hover / --idx-line are NOT redeclared: they are alpha over --ink-rgb,
- * so flipping the channels flips them too. That is the whole reason --ink-rgb exists.
- *
- * NOT TOUCHED HERE: --brand, --brand-hover and --accent-2. Those belong to the content repo
- * (theme.css, loaded after this file), and a brand tuned for glow on slate can be unreadable on
- * off-white — python's is a mid-blue that drops to ~2.5:1 on #f7f8fa. A repo going light must
- * re-pick its three tokens; the shell cannot do it for them without taking ownership of the one
- * surface it deliberately leaves alone. */
 :root[data-theme='light'] {
-  --bg: #f7f8fa; /* identical to ui-flow's light surface, so the scene pane and the page agree */
+  --bg: #f7f8fa;
   --fg: #1a1d23;
   --ink-rgb: 26, 29, 35;
-  /* On dark the slide panel is LIFTED off the canvas; on light the same relationship means going
-     brighter than the page, not darker — so white, not a grey. */
+
   --surface-lift: #ffffff;
   --surface-lift-2: #eef1f5;
   --slide-ink: #333a45;
   --foot-dim: #7a8493;
   --foot-dimmer: #98a2b1;
   --muted: #5a6675;
-  /* Platform blue darkened until it carries text contrast on off-white; #5b8cff is tuned to glow
-     on slate and reads washed out here. Still platform blue, still not --brand. */
+
   --accent: #2f6fe0;
   --accent-soft: rgba(47, 111, 224, 0.12);
   --scrim: rgba(247, 248, 250, 0.9);
 }
 
-/* Set for the single frame a theme swap lands in, so the whole page changes at once instead of the
-   ground flipping while everything with a hover transition cross-fades after it. Ported from
-   ui-graphl's styles.css — the site bar exists three times and they only stay one design if every
-   change lands in all of them. */
 .theme-swap * {
   transition: none !important;
 }
@@ -116,8 +62,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* The stage fills the viewport; at capture time the viewport is the target frame (4K landscape or
-   1080×1920 portrait), so the composition fills it exactly. */
 .stage {
   width: 100vw;
   height: 100vh;
@@ -131,14 +75,10 @@ body {
   opacity: 0.7;
 }
 
-/* react-flow theming to sit on the dark stage */
 .react-flow {
   background: var(--bg);
 }
 
-/* --- Section layout (scene + fixed-right slide surface) -------------------- */
-/* The slide is a full-height surface LIFTED off the scene canvas (figure-ground), fixed right.
-   Base = PORTRAIT (mobile → reel): scene fills the frame; slide is an off-canvas right drawer. */
 .stage--section {
   position: relative;
   overflow: hidden;
@@ -152,13 +92,13 @@ body {
   top: 0;
   right: 0;
   height: 100%;
-  width: 100%; /* portrait: full-screen reading surface (landscape overrides to a 42% column) */
+  width: 100%;
   display: flex;
   align-items: safe center;
   justify-content: center;
   overflow: auto;
   box-sizing: border-box;
-  background: var(--surface-lift); /* lifted slide surface, off the #1a1d23 scene canvas */
+  background: var(--surface-lift);
   border-left: 1px solid rgba(var(--ink-rgb), 0.09);
   transform: translateX(100%);
   transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
@@ -167,41 +107,43 @@ body {
 .slide-panel--open {
   transform: translateX(0);
 }
-.slide-toggle {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  z-index: 11;
+.slide-toggle,
+.reel-foot__ctrl {
   width: 36px;
   height: 36px;
   border-radius: 10px;
   border: 1px solid rgba(var(--ink-rgb), 0.12);
   background: var(--scrim);
   color: rgba(var(--ink-rgb), 0.82);
-  font-size: 19px;
-  line-height: 1;
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
+.slide-toggle {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 11;
+  font-size: 19px;
+  line-height: 1;
+}
 @media (hover: hover) {
-  .slide-toggle:hover {
-    color: var(--idx-accent);
-    border-color: var(--idx-accent);
+  .slide-toggle:hover,
+  .reel-foot__ctrl:hover {
+    color: var(--brand);
+    border-color: var(--brand);
   }
 }
-.slide-toggle:focus:not(:focus-visible) {
+.slide-toggle:focus:not(:focus-visible),
+.reel-foot__ctrl:focus:not(:focus-visible) {
   outline: none;
 }
-.slide-toggle:focus-visible {
-  outline: 2px solid var(--idx-accent);
+.slide-toggle:focus-visible,
+.reel-foot__ctrl:focus-visible {
+  outline: 2px solid var(--brand);
   outline-offset: 2px;
 }
 
-/* Footer control bar (interactive only). Raised above the portrait drawer so Home + narration + nav
-   stay usable while the slide is open. Compound selector (.reel-foot.reel-foot--controls, 0,2,0) so it
-   outranks the base .reel-foot rule (z-index 8 / align baseline), which is defined LATER in the file —
-   at equal specificity that base would win here. */
 .reel-foot.reel-foot--controls {
   z-index: 12;
   align-items: center;
@@ -216,35 +158,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  border: 1px solid rgba(var(--ink-rgb), 0.12);
-  background: var(--scrim);
-  color: rgba(var(--ink-rgb), 0.82);
-  cursor: pointer;
-  pointer-events: auto; /* the footer container is pointer-events:none; re-enable the buttons */
-  transition: color 0.15s, border-color 0.15s;
-  -webkit-tap-highlight-color: transparent; /* no grey/blue tap flash on mobile */
-}
-/* Hover feedback only on real-pointer devices — on touch, :hover "sticks" after a tap and leaves the
-   icon highlighted until you tap elsewhere.
-   --brand, NOT --idx-accent: that token is declared on `.idx` (the catalog column) and does not
-   exist on a section, so every --idx-accent here resolved to nothing and the hover/focus accent was
-   silently dead. --brand is what .idx aliases it to anyway. */
-@media (hover: hover) {
-  .reel-foot__ctrl:hover {
-    color: var(--brand);
-    border-color: var(--brand);
-  }
-}
-/* Drop the focus ring on click/tap; keep a keyboard-only ring for accessibility. */
-.reel-foot__ctrl:focus:not(:focus-visible) {
-  outline: none;
-}
-.reel-foot__ctrl:focus-visible {
-  outline: 2px solid var(--brand);
-  outline-offset: 2px;
+  pointer-events: auto;
 }
 .reel-foot__count--live {
   pointer-events: none;
@@ -252,12 +166,6 @@ body {
   text-align: center;
 }
 
-/* Narration scrub bar — the middle child of the control cluster (NarrationBar). LANDSCAPE ONLY: it
-   is `display: none` here and switched on in the landscape block below. In portrait the row is
-   already full at phone width (three controls + the pager leave ~60px), and the only other place to
-   put it is a second row — which would grow this absolutely-positioned footer UP into the frame,
-   since the portrait scene reserve (.stage--section .scene-area, bottom: 7.5vh) is sized for one
-   row. Widening that reserve would re-frame every recorded reel, so the bar yields instead. */
 .reel-foot__audio {
   display: none;
   align-items: center;
@@ -270,8 +178,7 @@ body {
   text-align: center;
   font-size: 1.3vh;
 }
-/* The track is the hit target, so it gets vertical padding (a 4px line is not tappable) with the
-   visible rail drawn as a pseudo-element inside it. */
+
 .reel-foot__track {
   position: relative;
   flex: 1 1 auto;
@@ -280,8 +187,8 @@ body {
   display: flex;
   align-items: center;
   cursor: pointer;
-  pointer-events: auto; /* the footer container is pointer-events:none */
-  touch-action: none; /* a drag scrubs; it must not scroll the page */
+  pointer-events: auto;
+  touch-action: none;
   -webkit-tap-highlight-color: transparent;
 }
 .reel-foot__track::before {
@@ -312,8 +219,7 @@ body {
   transition: transform 0.12s;
   pointer-events: none;
 }
-/* The thumb is an affordance, not decoration: it appears on hover/focus/scrub and otherwise the bar
-   reads as a thin progress line (the footer sits over the scene). */
+
 @media (hover: hover) {
   .reel-foot__track:hover .reel-foot__thumb {
     transform: translateY(-50%) scale(1);
@@ -323,13 +229,7 @@ body {
 .reel-foot__track:focus-visible .reel-foot__thumb {
   transform: translateY(-50%) scale(1);
 }
-/* THE FOCUS INDICATOR IS THE THUMB, NOT A BOX ROUND THE BAR. An outline on the track draws a brand
-   rectangle ~500px wide across the scene, and it showed up where nothing had been clicked: Chrome
-   promotes an ALREADY mouse-focused element to :focus-visible on the next key press, so a reader who
-   click-scrubbed and then pressed Space (narration — a window-level shortcut with nothing to do with
-   this bar) got the rectangle, and it stayed for the rest of the section. The thumb carries the same
-   information at the size of the control, so keyboard focus is still visible without painting the
-   frame. Keep the ring on `.reel-foot__ctrl` — those are 28px buttons where a box IS the control. */
+
 .reel-foot__track:focus {
   outline: none;
 }
@@ -337,9 +237,6 @@ body {
   box-shadow: 0 0 0 3px rgba(var(--ink-rgb), 0.3);
 }
 
-/* GraphL wordmark — top-left of the bare SCENE view; click or Esc → back to catalog. (The section
-   view brands via its own header/footer, whose eyebrow is the home link.)
-   Fixed to the viewport so it sits above the stage regardless of layout; hidden under ?capture=1. */
 .brand-home {
   position: fixed;
   top: 14px;
@@ -358,16 +255,9 @@ body {
   transition: color 0.2s;
 }
 .brand-home:hover {
-  color: var(--brand); /* Python-blue, matching the catalog accent */
+  color: var(--brand);
 }
 
-/* Section header/footer — shared chrome for the interactive app AND the captured video. It brands the
-   empty canvas around the fitView-centred scene: an "AWS · FOUNDATIONS" eyebrow (also the back-to-
-   catalog link) + the section title up top, a GraphL brand + §n/N counter below. Sizes are in vh so
-   they hold the SAME pixels at the capture frames (3840×2160 / 1080×1920) yet scale proportionally to
-   any interactive window. The bands are pointer-events:none (they overlay the scene) except the
-   eyebrow button, which re-enables clicks; z-index sits below the portrait slide drawer (z 10) so an
-   open drawer covers them. */
 .reel-head {
   position: absolute;
   top: 0;
@@ -388,8 +278,8 @@ body {
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--brand); /* Python-blue accent, matching the catalog brand */
-  pointer-events: auto; /* the one clickable element in the header → back to catalog */
+  color: var(--brand);
+  pointer-events: auto;
   cursor: pointer;
   transition: color 0.2s;
 }
@@ -416,27 +306,18 @@ body {
   justify-content: space-between;
   pointer-events: none;
 }
-.reel-foot__brand {
-  font-size: 1.55vh;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: rgba(var(--ink-rgb), 0.9);
-}
 .reel-foot__count {
   font-size: 1.4vh;
   color: rgba(var(--ink-rgb), 0.5);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
 }
-/* Reserve the bands so fitView packs the scene BETWEEN them (never under the title). Every section
-   view shows the header/footer, so the reserve is scoped to the section (not just capture). */
+
 .stage--section .scene-area {
   top: 12.5vh;
   bottom: 7.5vh;
 }
 
-/* LANDSCAPE (laptop → 4K video): the slide is a true 42% COLUMN — no absolute cap, so it stays 42%
-   of whatever the frame is, 4K included. The scene fills the rest; drawer transform/toggle off. */
 @media (orientation: landscape) {
   .stage--section {
     display: flex;
@@ -448,16 +329,13 @@ body {
     height: 100%;
     inset: auto;
   }
-  /* Header/footer carry over but constrained to the SCENE column (left 58%; the slide is the right
-     42%) so they brand the diagram without straddling the slide. The section title is dropped here —
-     it already headlines the slide — leaving the eyebrow on top and the GraphL + §n/N line below,
-     sitting in the scene's fitView margins. Font sizes (vh) are shared with portrait. */
+
   .reel-head {
-    right: 42%; /* right edge at the scene/slide boundary → spans only the scene column */
+    right: 42%;
     padding: 2.8vh 0 0 1.9vw;
   }
   .reel-head__title {
-    display: none; /* the section title lives in the slide in landscape */
+    display: none;
   }
   .reel-head__eyebrow {
     margin-bottom: 0;
@@ -466,14 +344,13 @@ body {
     right: 42%;
     padding: 0 1.9vw 2.6vh;
   }
-  /* The scene column is wide enough for the scrub bar between the two clusters (see the
-     portrait-only note on .reel-foot__audio). */
+
   .reel-foot__audio {
     display: flex;
     flex: 1 1 auto;
     margin: 0 1.4vw;
   }
-  /* Scene reserve is portrait-only; in landscape the scene-area is the full-height flex column. */
+
   .stage--section .scene-area {
     top: auto;
     bottom: auto;
@@ -490,25 +367,18 @@ body {
   .slide-toggle {
     display: none;
   }
-  /* Restore the capture-tuned slide metrics (the base carries the larger portrait values). Scoped
-     with .stage--section so it outranks the base .slide-panel__scaler rule, which is defined LATER
-     in the file — at equal specificity that base would otherwise win here too. */
+
   .stage--section .slide-panel__scaler {
     padding: 0 60px;
     --fs-body: 26px;
   }
 }
 
-/* --- Slide scaler + markdown ----------------------------------------------- */
-/* The scaler is authored at DESIGN_PANE px (see useSlideScale) and `zoom`-scaled to the live pane,
-   so every dimension below is DESIGN px and stays proportional to the target frame at any size.
-   One type scale drives the whole slide — every size steps off --fs-body, so retuning the slide for
-   capture legibility is a ONE-NUMBER change (adapted from the studio reveal-engine). */
 .slide-panel__scaler {
   box-sizing: border-box;
-  padding: 0 40px; /* portrait: trimmed side padding to fill the phone width (landscape restores 60) */
+  padding: 0 40px;
   color: var(--slide-ink);
-  --fs-body: 31px; /* portrait/reels: larger so the slide fills the phone (landscape restores 26) */
+  --fs-body: 31px;
   --fs-title: calc(var(--fs-body) * 1.73);
   --fs-heading: calc(var(--fs-body) * 1.2);
   --fs-code: calc(var(--fs-body) * 0.78);
@@ -521,25 +391,23 @@ body {
 .slide-panel__scaler > :last-child {
   margin-bottom: 0;
 }
-/* `##` → the slide title. */
+
 .slide-panel__scaler h2 {
   margin: 0 0 20px;
   font-size: var(--fs-title);
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.01em;
-  color: var(--brand); /* Python-blue brand accent — same anchor as the reel eyebrow + catalog */
+  color: var(--brand);
 }
-/* `###` → a section heading in Python-yellow: a warm counter to the cool blue title (the Python
-   logo's blue + yellow). Sentence-case and sized above the body (a real heading, not a quiet
-   eyebrow) — the warm/cool pair structures the slide at a glance while the body stays neutral. */
+
 .slide-panel__scaler h3 {
   margin: 30px 0 12px;
   font-size: var(--fs-heading);
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.01em;
-  color: var(--accent-2); /* Python-yellow */
+  color: var(--accent-2);
 }
 .slide-panel__scaler p {
   margin: 0 0 16px;
@@ -579,17 +447,6 @@ body {
   color: rgba(var(--ink-rgb), 0.9);
 }
 
-/* --- Course catalog / landing page (CourseIndex) ---------------------------- */
-/* The index is a scrollable page (unlike the fixed stage): the catalog of courses, each course a
-   card listing its ordered sections. Python-blue (--idx-accent) is the one accent. */
-/* ── Site chrome (SiteHeader) ──────────────────────────────────────────────────────────────────
-   Ported from ui-graphl/styles.css, class for class. ui-graphl is buildless vanilla and this is a
-   React package, so one shared component is impossible — but one shared DESIGN is not, and it only
-   survives if neither copy drifts. Change this, change that. The single deliberate deviation is
-   --site-h: over there the 60px row height is a literal, here .idx has to subtract it.
-
-   Traditional chrome: brand on the left, section nav on the right, full-bleed rule underneath. The
-   inner row matches the catalog's own max-width so the brand lines up with the cards below it. */
 .site {
   border-bottom: 1px solid var(--line);
   background: var(--header-bg);
@@ -597,10 +454,7 @@ body {
 .site__inner {
   max-width: 940px;
   margin: 0 auto;
-  /* Explicit, and NOT optional: ui-graphl has a global `* { box-sizing: border-box }` and this
-     stylesheet deliberately does not (a global reset here would move the section view, which is
-     burned into video). Without it the bar's column is 940 + 64 of padding while .idx is 940
-     inclusive, and the brand sits 32px left of the cards it is supposed to line up with. */
+
   box-sizing: border-box;
   padding: 0 32px;
   min-height: var(--site-h);
@@ -609,7 +463,7 @@ body {
   gap: 20px;
 }
 .site__brand {
-  margin-right: auto; /* holds the brand left; nav + actions collect on the right */
+  margin-right: auto;
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -652,16 +506,13 @@ body {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-/* The icon buttons — the theme toggle and the account control when they exist. Kept separate from
-   the nav so that on a phone the nav can drop to its own row while these stay up on the brand row.
-   Empty until something is passed to SiteHeader's `actions` slot. */
+
 .site__actions {
   display: flex;
   align-items: center;
   gap: 6px;
 }
-/* Square icon button, styled here so the slot's occupant does not have to carry its own CSS. Sized
-   36px so it is a comfortable target without towering over the 60px header row. */
+
 .site__icon {
   flex: none;
   width: 36px;
@@ -688,9 +539,6 @@ body {
   outline-offset: 2px;
 }
 
-/* Phone: the nav row scrolls horizontally rather than collapsing into a hamburger. There are three
-   sections today and there will be more, but they are the primary navigation and the whole point of
-   the current one is being visible; a menu would hide "you are here" behind a tap. */
 @media (max-width: 560px) {
   .site__inner {
     padding: 8px 20px;
@@ -698,9 +546,9 @@ body {
     gap: 0 12px;
   }
   .site__nav {
-    order: 3; /* after brand and actions ⇒ its own row */
+    order: 3;
     flex: 1 0 100%;
-    margin: 2px -20px 0; /* bleed to the screen edges so the row can scroll fully */
+    margin: 2px -20px 0;
     padding: 0 20px 4px;
     overflow-x: auto;
     scrollbar-width: none;
@@ -711,7 +559,7 @@ body {
   .site__link {
     display: flex;
     align-items: center;
-    min-height: 40px; /* comfortable touch target */
+    min-height: 40px;
     padding: 8px 10px;
     font-size: 14px;
   }
@@ -723,12 +571,10 @@ body {
 
 .idx {
   --idx-accent: var(--brand);
-  --idx-muted: var(--muted); /* was the literal #8b909c — the same value --muted already holds, so
-                               aliasing is byte-identical on dark and picks up the light block */
+  --idx-muted: var(--muted);
   --idx-line: rgba(var(--ink-rgb), 0.09);
-  /* The bar is a sibling above this column, so the viewport it can fill is what the bar leaves.
-     On a phone the bar wraps to two rows and this under-subtracts — harmless, it is a min. */
-  min-height: calc(100vh - var(--site-h) - 1px); /* the bar's row, plus its 1px rule */
+
+  min-height: calc(100vh - var(--site-h) - 1px);
   max-width: 940px;
   margin: 0 auto;
   padding: 28px 32px 64px;
@@ -737,8 +583,7 @@ body {
 .idx__head {
   margin-bottom: 36px;
 }
-/* Catalog header: just the subject title now — the GraphL wordmark it used to sit under is in
-   the site bar above (SiteHeader), which is the same bar graphl.in carries. */
+
 .idx__subject {
   margin: 0;
   font-size: 40px;
@@ -754,7 +599,6 @@ body {
   border-radius: 14px;
 }
 
-/* Courses grid — a single column of accordion cards (tight gap since most sit collapsed). */
 .idx__grid {
   list-style: none;
   margin: 0;
@@ -763,8 +607,6 @@ body {
   gap: 12px;
 }
 
-/* A course card = an accordion: a header button (number · title · count · caret) that toggles the
-   section list below it. */
 .idx-card {
   border: 1px solid var(--idx-line);
   border-radius: 14px;
@@ -789,7 +631,7 @@ body {
 .idx-card__head:hover {
   background: var(--surface-lift-2);
 }
-/* Divider only when open — a collapsed row is a clean single bar. */
+
 .idx-card--open .idx-card__head {
   border-bottom: 1px solid var(--idx-line);
 }
@@ -829,7 +671,6 @@ body {
   color: var(--idx-accent);
 }
 
-/* Section list inside a card — thin numbered rows, hover slides the chevron. */
 .idx-sec {
   list-style: none;
   margin: 0;
@@ -889,10 +730,6 @@ body {
   color: rgba(var(--ink-rgb), 0.9);
 }
 
-/* The bar's phone gutter is 20px, so the catalog column's has to be too — otherwise the brand and
-   the subject title below it sit on two different left edges. Matches ui-graphl's own phone rule.
-   It lives down HERE, not up with the rest of the .site phone rules, because .idx's own padding is
-   declared after them and would otherwise win at equal specificity. */
 @media (max-width: 560px) {
   .idx {
     padding: 20px 20px 48px;

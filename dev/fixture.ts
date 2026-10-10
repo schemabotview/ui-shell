@@ -1,11 +1,6 @@
 import type { Scene } from '@graphlearning/flow'
 import type { Course } from '../src/types'
 
-// Throwaway content, deliberately minimal: two courses so the harness exercises the one thing a
-// single course cannot — the GLOBAL section stream, where → past a course's last section rolls into
-// the next course's first. Everything else the shell does (slide markdown, the drawer, the pager,
-// the catalog accordion, a missing scene) is visible from these five sections.
-
 export const SCENES: Record<string, Scene> = {
   'fx-flow': {
     id: 'fx-flow',

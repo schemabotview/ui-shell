@@ -1,69 +1,47 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
-// The narration scrub bar — elapsed / position / duration for the current section's clip, in the
-// footer control cluster beside the volume toggle. Interactive ONLY: it lives inside SectionView's
-// `!capture` footer, so it can never appear in a recorded frame (same guarantee as the pager and the
-// theme toggle beside it).
-//
-// WHY IT TAKES THE ELEMENT, NOT STATE: `timeupdate` fires ~4x a second. Lifting that into
-// ConceptApp would re-render the whole section — SceneView (layout + react-flow) and the
-// react-markdown slide — four times a second for a 4px bar. So useNarration hands out the one
-// <audio> element and this component subscribes to it directly; the only thing that re-renders on a
-// tick is the bar. Nothing else in the shell learns that playback has a position.
-//
-// A section whose clip is missing or not generated yet (docker, java) has no duration, so the bar
-// renders NOTHING rather than a dead track — the volume toggle already carries that state.
-// The scrub step, in seconds — shared with ConceptApp's window-level ← / →, which seeks by the same
-// amount when a clip is loaded. One constant so the key does the same thing whether or not the track
-// happens to hold focus.
 export const SEEK_S = 10
+
+const EVENTS = ['loadedmetadata', 'durationchange', 'timeupdate', 'seeked', 'ended', 'emptied', 'error'] as const
+
+const fmt = (s: number) => {
+  const t = Number.isFinite(s) && s > 0 ? s : 0
+  return `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`
+}
 
 export function NarrationBar({ audio }: { audio: HTMLAudioElement | null }) {
   const [time, setTime] = useState(0)
   const [duration, setDuration] = useState(0)
-  const trackRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (!audio) return
     const sync = () => {
       setTime(audio.currentTime)
-      // A clip still loading (or 404'd, or unloaded between sections) reports NaN/Infinity.
       setDuration(Number.isFinite(audio.duration) ? audio.duration : 0)
     }
     sync()
-    // `emptied` is the one that matters on navigation: useNarration removes the src for a section
-    // with no clip, and without this the bar would keep showing the previous clip's length.
-    const events = ['loadedmetadata', 'durationchange', 'timeupdate', 'seeked', 'ended', 'emptied', 'error'] as const
-    events.forEach((e) => audio.addEventListener(e, sync))
-    return () => events.forEach((e) => audio.removeEventListener(e, sync))
+    EVENTS.forEach((e) => audio.addEventListener(e, sync))
+    return () => EVENTS.forEach((e) => audio.removeEventListener(e, sync))
   }, [audio])
 
   if (!audio || !duration) return null
 
-  const seekToClientX = (clientX: number) => {
-    const el = trackRef.current
-    if (!el) return
-    const r = el.getBoundingClientRect()
-    const f = Math.min(1, Math.max(0, (clientX - r.left) / r.width))
-    audio.currentTime = f * duration
-    setTime(audio.currentTime) // don't wait for the next timeupdate — the thumb must track the finger
+  const seek = (t: number) => {
+    audio.currentTime = Math.min(duration, Math.max(0, t))
+    setTime(audio.currentTime)
   }
 
-  // Arrow keys scrub by the same SEEK_S as the window-level handler; stopping propagation keeps
-  // ConceptApp from ALSO seeking the same clip (it would double the step) and keeps Shift+← / →
-  // from paging out of a section the reader is actively scrubbing. Every other key (Esc home, Space
-  // narration) is left to bubble. Home/End are handled only here, where the track has focus.
+  const seekToX = (track: HTMLElement, clientX: number) => {
+    const { left, width } = track.getBoundingClientRect()
+    seek(((clientX - left) / width) * duration)
+  }
+
   const onKeyDown = (e: React.KeyboardEvent) => {
-    const step = (d: number) => {
-      e.preventDefault()
-      e.stopPropagation()
-      audio.currentTime = Math.min(duration, Math.max(0, audio.currentTime + d))
-      setTime(audio.currentTime)
-    }
-    if (e.key === 'ArrowLeft') step(-SEEK_S)
-    else if (e.key === 'ArrowRight') step(SEEK_S)
-    else if (e.key === 'Home') step(-duration)
-    else if (e.key === 'End') step(duration)
+    const delta = { ArrowLeft: -SEEK_S, ArrowRight: SEEK_S, Home: -duration, End: duration }[e.key]
+    if (delta === undefined) return
+    e.preventDefault()
+    e.stopPropagation()
+    seek(audio.currentTime + delta)
   }
 
   const pct = `${Math.min(100, (time / duration) * 100)}%`
@@ -71,7 +49,6 @@ export function NarrationBar({ audio }: { audio: HTMLAudioElement | null }) {
     <span className="reel-foot__audio">
       <span className="reel-foot__count reel-foot__time">{fmt(time)}</span>
       <div
-        ref={trackRef}
         className="reel-foot__track"
         role="slider"
         tabIndex={0}
@@ -82,13 +59,11 @@ export function NarrationBar({ audio }: { audio: HTMLAudioElement | null }) {
         aria-valuetext={`${fmt(time)} of ${fmt(duration)}`}
         onKeyDown={onKeyDown}
         onPointerDown={(e) => {
-          // Capture so a drag that leaves the 4px track keeps scrubbing (the bar is thin; fingers
-          // and mice both wander off it).
           e.currentTarget.setPointerCapture(e.pointerId)
-          seekToClientX(e.clientX)
+          seekToX(e.currentTarget, e.clientX)
         }}
         onPointerMove={(e) => {
-          if (e.currentTarget.hasPointerCapture(e.pointerId)) seekToClientX(e.clientX)
+          if (e.currentTarget.hasPointerCapture(e.pointerId)) seekToX(e.currentTarget, e.clientX)
         }}
       >
         <span className="reel-foot__fill" style={{ width: pct }} />
@@ -97,10 +72,4 @@ export function NarrationBar({ audio }: { audio: HTMLAudioElement | null }) {
       <span className="reel-foot__count reel-foot__time">{fmt(duration)}</span>
     </span>
   )
-}
-
-/** m:ss — clips are seconds-to-minutes, never hours. */
-function fmt(s: number) {
-  const t = Number.isFinite(s) && s > 0 ? s : 0
-  return `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`
 }

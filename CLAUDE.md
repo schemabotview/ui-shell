@@ -127,7 +127,7 @@ Port 5176 is deliberate: 5173 is a content repo, 5174 is `ui-flow`, and all thre
 - **`--idx-accent` does not exist on a section.** It is declared on `.idx` — the catalog column — so
   every `var(--idx-accent)` in the `.reel-foot*` rules resolved to nothing and the control hover
   colour and focus ring were silently dead. Those now use `--brand`, which is what `.idx` aliases it
-  to. `.slide-toggle` (lines above) still has the same dead token and was left alone.
+  to, and so does `.slide-toggle` (it shares one rule block with `.reel-foot__ctrl`).
 - **`--ink-rgb` is why light was additive.** ~20 `rgba(255,255,255,a)` literals in `styles.css` were
   all "ink at some alpha", so parameterising the CHANNELS converts every one by substitution and
   leaves dark byte-identical — one token instead of eleven alpha tokens. `--line`, `--header-bg`,
@@ -266,8 +266,6 @@ config and the path roots at once.
 
 - README's peer-dependency section still quotes the engine range as `>=0.5.0 <1.0.0`;
   `package.json` has said `>=0.8.0 <2.0.0` since flow went 1.x. The reasoning around it is current.
-- The `graphl-capture-shots` bin (`scripts/capture-shots.mjs`) is not in README's toolchain table.
-- `scripts/shots-4k.mjs` defaults its course argument to `'foundations'` — a content-repo name that
-  leaked into the package during the extraction. Harmless (every repo passes a course) but wrong here.
+- The `graphl-capture-shots` bin (`scripts/capture-shots.mjs`) is a stub that exits 1, and is not in README's toolchain table.
 - The workspace `CLAUDE.md` lists `npm run check` among the pre-handover guards; no such script
   exists here (see Commands).
