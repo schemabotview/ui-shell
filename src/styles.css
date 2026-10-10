@@ -441,29 +441,19 @@ body {
   .stage--section {
     display: flex;
   }
-  /* The scene is a 9:16 PHONE FRAME at full height — the shape a reel is — centred in the left 58%
-     (the slide keeps its 42% column). Width follows height (56.25vh), capped at the column so a
-     squat window shrinks the frame's width, never its height. --frame-gap is the empty band each
-     side of it; the header and footer are pulled in to the frame's edges so they brand the frame,
-     not the empty bands. */
-  .stage--section {
-    --frame-w: min(56.25vh, 58vw);
-    --frame-gap: calc((58vw - var(--frame-w)) / 2);
-  }
   .scene-area {
     position: relative;
-    flex: 0 0 var(--frame-w);
-    width: var(--frame-w);
-    margin: 0 var(--frame-gap);
+    flex: 1 1 auto;
+    min-width: 0;
     height: 100%;
     inset: auto;
   }
-  /* Header/footer carry over but constrained to the FRAME. The section title is dropped here — it
-     already headlines the slide — leaving the eyebrow on top and the GraphL + §n/N line below,
+  /* Header/footer carry over but constrained to the SCENE column (left 58%; the slide is the right
+     42%) so they brand the diagram without straddling the slide. The section title is dropped here —
+     it already headlines the slide — leaving the eyebrow on top and the GraphL + §n/N line below,
      sitting in the scene's fitView margins. Font sizes (vh) are shared with portrait. */
   .reel-head {
-    left: var(--frame-gap);
-    right: calc(42% + var(--frame-gap));
+    right: 42%; /* right edge at the scene/slide boundary → spans only the scene column */
     padding: 2.8vh 0 0 1.9vw;
   }
   .reel-head__title {
@@ -473,12 +463,11 @@ body {
     margin-bottom: 0;
   }
   .reel-foot {
-    left: var(--frame-gap);
-    right: calc(42% + var(--frame-gap));
+    right: 42%;
     padding: 0 1.9vw 2.6vh;
   }
-  /* The frame is wide enough for the scrub bar between the two clusters (see the portrait-only
-     note on .reel-foot__audio). */
+  /* The scene column is wide enough for the scrub bar between the two clusters (see the
+     portrait-only note on .reel-foot__audio). */
   .reel-foot__audio {
     display: flex;
     flex: 1 1 auto;

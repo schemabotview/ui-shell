@@ -114,13 +114,6 @@ Port 5176 is deliberate: 5173 is a content repo, 5174 is `ui-flow`, and all thre
   window-level ones cannot drift to different step sizes. The track's own handler still
   `stopPropagation`s — with both handlers live on the same clip it would otherwise step TWICE.
   The footer pager's labels say `Shift+←` / `Shift+→` because that is the binding that always works.
-- **In landscape the scene is a 9:16 phone frame at FULL height, centred in the left 58%.** The frame
-  is `--frame-w: min(56.25vh, 58vw)` wide and `100%` tall, with `--frame-gap` of empty band each side
-  (`margin: 0 var(--frame-gap)`); the slide keeps its 42% column and the header/footer are inset to
-  the frame's edges. A squat window shrinks the frame's WIDTH, never its height — the scene is never
-  made shorter to fit. Portrait is untouched (still the 12.5vh/7.5vh reserve). Measured: 1920x1080 →
-  scene 608x1080 at x=253, slide at x=1114; 430x932 unchanged. This DOES change landscape/4K
-  captures (the scene is now 9:16 inside the frame), so re-record landscape reels after it lands.
 - **Section nav walks the GLOBAL stream, the header counter does not.** `globalSections` (every
   course flattened in `COURSES` insertion order) drives `go()` and the narration's auto-advance, so
   → past a course's last section enters the next course's first and narration flows chapter to
