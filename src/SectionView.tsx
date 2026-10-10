@@ -62,7 +62,7 @@ export function SectionView({
   const scene = getScene(section.scene)
   if (!scene) return <div className="stage stage--missing">no scene: {section.scene}</div>
   return (
-    <div className="stage stage--section">
+    <div className={`stage stage--section${capture ? ' stage--capture' : ''}`}>
       {/* Header/footer — shared with the captured video. The eyebrow is a button (back to catalog);
           the section title shows on the portrait title card and is hidden in landscape (it headlines
           the slide there). GraphL + §n/N sit along the bottom. */}

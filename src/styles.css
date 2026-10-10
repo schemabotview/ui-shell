@@ -458,6 +458,12 @@ body {
     height: 100%;
     inset: auto;
   }
+  /* Make the frame visible: a hairline just OUTSIDE its edge (box-shadow, so the scene's own canvas
+     can never paint over it and the frame keeps its exact 9:16 size). Interactive only — a recorded
+     frame must not carry a border the reader-facing bands exist to show. */
+  .stage--section:not(.stage--capture) .scene-area {
+    box-shadow: 0 0 0 1px rgba(var(--ink-rgb), 0.2);
+  }
   /* Header/footer carry over but constrained to the FRAME. The section title is dropped here — it
      already headlines the slide — leaving the eyebrow on top and the GraphL + §n/N line below,
      sitting in the scene's fitView margins. Font sizes (vh) are shared with portrait. */
