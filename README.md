@@ -2,7 +2,7 @@
 
 The GraphL concept-app shell: everything a content repo renders *around* its content.
 
-A content repo authors two things — **courses** (sections: scene + slide + narration) and **scenes**
+A content repo authors two things — **courses** (sections: scene + optional slide + narration) and **scenes**
 (diagrams / code cards, drawn by [`@graphlearning/flow`](../ui-flow)). Everything else —
 the hash router, the section composition, the slide panel, the course catalog, the narration
 channel, the whole stylesheet — was an identical copy in all seven repos. It lives here now.
@@ -67,6 +67,20 @@ the contract each repo used to re-declare by hand.
 **3. `audioBase` must be passed in.** `import.meta.env.BASE_URL` is replaced at the *consuming
 app's* build time (its vite `base`, e.g. `/python/`). This package is built separately, so a literal
 here would bake in the wrong base and 404 on every deployed site.
+
+## Scene-only sections
+
+`slide` is optional. A section **without** one renders scene-only: no slide panel, no toggle, and in
+landscape the scene takes the whole frame width (3840 px at 4K, against 2227 px beside a slide)
+under the eyebrow and the section title, which move onto the frame because there is no slide to
+carry the title. Portrait is unchanged except that the toggle disappears.
+
+A section **with** a slide renders exactly as before — measured on python-ct's 86 sections at
+3840×2160, every frame is byte-identical — so a repo migrates one section at a time.
+
+Dropping the slide does not by itself make a scene larger. A tall scene is fitted by the frame's
+HEIGHT and gains nothing from the extra width; it pays off when the scene is re-authored to use the
+width (side-by-side `flow: 'LR'`, and the slide's facts moved into tables, lists and notes).
 
 ## The per-repo surface
 

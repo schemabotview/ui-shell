@@ -10,8 +10,38 @@ export const SCENES: Record<string, Scene> = {
       { id: 'c', label: 'Sink', sub: 'where it lands', pattern: 'storage' },
     ],
     edges: [
-      { from: 'a', to: 'b' },
-      { from: 'b', to: 'c' },
+      { source: 'a', target: 'b' },
+      { source: 'b', target: 'c' },
+    ],
+  },
+  'fx-full': {
+    id: 'fx-full',
+    flow: 'LR',
+    nodes: [
+      { id: 'in', label: 'Orders', sub: 'one row per order line', pattern: 'storage', icon: 'table' },
+      {
+        id: 'rows',
+        kind: 'table',
+        label: 'order_lines',
+        headers: ['order', 'sku', 'qty', 'price'],
+        values: [
+          ['A-1001', 'TEA-01', '3', '4.50'],
+          ['A-1001', 'MUG-02', '1', '8.00'],
+          ['A-1002', 'TEA-01', '2', '4.50'],
+        ],
+      },
+      {
+        id: 'facts',
+        kind: 'list',
+        label: 'What the slide used to say',
+        icon: 'scroll',
+        pattern: 'service',
+        items: ['The data the narration names is in the frame', 'No panel competes with the diagram', 'Title and eyebrow sit on the frame itself'],
+      },
+    ],
+    edges: [
+      { source: 'in', target: 'rows' },
+      { source: 'rows', target: 'facts' },
     ],
   },
   'fx-code': {
@@ -48,7 +78,7 @@ export const COURSES: Record<string, Course> = {
         scene: 'fx-flow',
         slide: slide(
           'A diagram scene',
-          'The scene is a **react-flow diagram**, laid out entirely by the engine.\n\n### What to check\n— The eyebrow reads `FIXTURE · ALPHA` in `--brand`\n— This `###` heading is in `--accent-2`\n— `inline code` sits on the slide surface\n\n### And the controls\n— `←` / `→` seek narration ±10s (no clip → walk sections), `Shift`+`←` / `→` always walk, `Space` toggles narration\n— The footer pager shows `1 / 3`',
+          'The scene is a **diagram**, laid out entirely by the engine.\n\n### What to check\n— The eyebrow reads `FIXTURE · ALPHA` in `--brand`\n— This `###` heading is in `--accent-2`\n— `inline code` sits on the slide surface\n\n### And the controls\n— `←` / `→` seek narration ±10s (no clip → walk sections), `Shift`+`←` / `→` always walk, `Space` toggles narration\n— The footer pager shows `1 / 3`',
         ),
         narration: 'A diagram scene, laid out by the engine.',
       },
@@ -84,6 +114,12 @@ export const COURSES: Record<string, Course> = {
           'You reached this by pressing `→` on the **last section of Alpha**.\n\n### Why this fixture has two courses\nSection nav walks the whole catalog as one stream, so a course boundary is just another step. With one course that behaviour is invisible.',
         ),
         narration: 'Crossing a course boundary.',
+      },
+      {
+        id: 'scene-only',
+        title: 'A scene-only section',
+        scene: 'fx-full',
+        narration: 'A section with no slide: the scene takes the whole frame.',
       },
       {
         id: 'end',

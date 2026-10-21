@@ -372,6 +372,28 @@ body {
     padding: 0 60px;
     --fs-body: 26px;
   }
+
+  .stage--scene-only .reel-head,
+  .stage--scene-only .reel-foot {
+    right: 0;
+  }
+  .stage--scene-only .reel-head {
+    padding-right: 1.9vw;
+  }
+  .stage--scene-only .reel-head__eyebrow {
+    margin-bottom: 1.1vh;
+  }
+  .stage--scene-only .reel-head__title {
+    display: block;
+  }
+  .stage--section.stage--scene-only .scene-area {
+    position: absolute;
+    top: 10.5vh;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: auto;
+  }
 }
 
 .slide-panel__scaler {

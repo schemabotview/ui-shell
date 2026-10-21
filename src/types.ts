@@ -5,7 +5,7 @@ export interface Section {
   title: string
   scene: string
   focus?: string
-  slide: string
+  slide?: string
   narration: string
 }
 

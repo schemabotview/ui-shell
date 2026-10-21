@@ -43,8 +43,9 @@ export function SectionView({
   const scene = getScene(section.scene)
   if (!scene) return <div className="stage stage--missing">no scene: {section.scene}</div>
   const dark = theme === 'dark'
+  const slide = section.slide
   return (
-    <div className="stage stage--section">
+    <div className={`stage stage--section${slide ? '' : ' stage--scene-only'}`}>
       <header className="reel-head">
         <button className="reel-head__eyebrow" onClick={onHome} {...tip('Back to catalog (Esc)')}>
           {eyebrow}
@@ -87,12 +88,12 @@ export function SectionView({
       <div className="scene-area">
         <SceneView scene={scene} focusId={section.focus} theme={theme} />
       </div>
-      {!capture && (
+      {!capture && slide && (
         <button className="slide-toggle" onClick={() => setOpen((o) => !o)} aria-label={open ? 'Hide slide' : 'Show slide'}>
           {open ? '›' : '‹'}
         </button>
       )}
-      <SlidePanel slide={section.slide} open={open} />
+      {slide && <SlidePanel slide={slide} open={open} />}
     </div>
   )
 }

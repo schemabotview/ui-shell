@@ -12,7 +12,8 @@ Read `README.md` first — it carries the integration, the three contracts and t
 ## What this package is, in one line
 
 `ui-flow` draws a scene. **This draws everything else**: the router, the section composition
-(scene left / slide right), the slide panel, the catalog, the narration channel, the stylesheet.
+(scene left / slide right, or the scene alone), the slide panel, the catalog, the narration channel,
+the stylesheet.
 
 ## Commands
 
@@ -124,6 +125,14 @@ Port 5176 is deliberate: 5173 is a content repo, 5174 is `ui-flow`, and all thre
   first section — but the recorder deliberately lands on `#/<course>` to read
   `window.__scene.plan()`, so the redirect is guarded by `!capture`. Breaking that guard breaks
   every recorder.
+- **A section with no `slide` is SCENE-ONLY, and absence is the only switch.** No prop, no repo-level
+  mode: `.stage--scene-only` is set from `section.slide` alone, so a repo migrates section by section
+  and every section that keeps its slide stays byte-identical (all 86 python-ct frames at 4K,
+  measured). In landscape the scene drops out of the flex row into an absolute box at
+  `top: 10.5vh` — the reserve for the eyebrow + title, which `.reel-head__title` shows again here
+  because the slide's `##` was carrying it. Header bottom 196 px < scene top 227 px at 3840×2160;
+  footer top 1016 > lowest node 733 at 1920×1080. Changing that reserve re-frames every scene-only
+  video. Portrait needed nothing — the title already showed there — beyond hiding the toggle.
 - **`--idx-accent` does not exist on a section.** It is declared on `.idx` — the catalog column — so
   every `var(--idx-accent)` in the `.reel-foot*` rules resolved to nothing and the control hover
   colour and focus ring were silently dead. Those now use `--brand`, which is what `.idx` aliases it
