@@ -13,6 +13,7 @@ export function SectionView({
   getScene,
   capture,
   eyebrow,
+  header,
   index,
   total,
   onHome,
@@ -28,6 +29,7 @@ export function SectionView({
   getScene: SceneLookup
   capture: boolean
   eyebrow: string
+  header: boolean
   index: number
   total: number
   onHome: () => void
@@ -45,13 +47,15 @@ export function SectionView({
   const dark = theme === 'dark'
   const slide = section.slide
   return (
-    <div className={`stage stage--section${slide ? '' : ' stage--scene-only'}`}>
-      <header className="reel-head">
-        <button className="reel-head__eyebrow" onClick={onHome} {...tip('Back to catalog (Esc)')}>
-          {eyebrow}
-        </button>
-        <h1 className="reel-head__title">{section.title}</h1>
-      </header>
+    <div className={`stage stage--section${slide ? '' : ' stage--scene-only'}${header ? '' : ' stage--no-head'}`}>
+      {header && (
+        <header className="reel-head">
+          <button className="reel-head__eyebrow" onClick={onHome} {...tip('Back to catalog (Esc)')}>
+            {eyebrow}
+          </button>
+          <h1 className="reel-head__title">{section.title}</h1>
+        </header>
+      )}
       {!capture && (
         <footer className="reel-foot reel-foot--controls">
           <span className="reel-foot__grp">

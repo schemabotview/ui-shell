@@ -317,6 +317,11 @@ body {
   top: 12.5vh;
   bottom: 7.5vh;
 }
+/* No header drawn (ConceptApp's `sectionHeader`, off by default): the scene area takes the band
+   the header would have held. */
+.stage--section.stage--no-head .scene-area {
+  top: 0;
+}
 
 @media (orientation: landscape) {
   .stage--section {
@@ -399,6 +404,10 @@ body {
     bottom: 0;
     left: 0;
     height: auto;
+  }
+  /* AFTER the scene-only rule on purpose: same specificity, so this only wins on source order. */
+  .stage--section.stage--no-head .scene-area {
+    top: 0;
   }
 }
 

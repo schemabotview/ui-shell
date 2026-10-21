@@ -18,6 +18,7 @@ export function ConceptApp({
   audioBase = '/',
   kind = 'courses',
   theme = 'dark',
+  sectionHeader = false,
 }: {
   subject: string
   courses: Record<string, Course>
@@ -26,6 +27,10 @@ export function ConceptApp({
   audioBase?: string
   kind?: string
   theme?: ThemeKey
+  /** Draw the subject/course/title header over a section. Off by default: a section is a video
+   *  frame, and the course is already in the video's own title, the URL and the frame itself.
+   *  With it off the scene area takes the whole frame — see SCENE_ASPECT. */
+  sectionHeader?: boolean
 }) {
   const [hash, setHash] = useState(() => location.hash)
   useEffect(() => {
@@ -137,6 +142,7 @@ export function ConceptApp({
         getScene={getScene}
         capture={capture}
         eyebrow={`${eyebrow ?? subject.toUpperCase()} · ${activeCourse!.id.toUpperCase()}`}
+        header={sectionHeader}
         index={sections.indexOf(match)}
         total={sections.length}
         onHome={goHome}
