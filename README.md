@@ -72,8 +72,8 @@ here would bake in the wrong base and 404 on every deployed site.
 
 `slide` is optional. A section **without** one renders scene-only: no slide panel, no toggle, and in
 landscape the scene takes the whole frame width (3840 px at 4K, against 2227 px beside a slide)
-under the eyebrow and the section title, which move onto the frame because there is no slide to
-carry the title. Portrait is unchanged except that the toggle disappears.
+under one header row — the eyebrow on the left, the section title centred — because there is no
+slide to carry the title. Portrait is unchanged except that the toggle disappears.
 
 A section **with** a slide renders exactly as before — measured on python-ct's 86 sections at
 3840×2160, every frame is byte-identical — so a repo migrates one section at a time.
