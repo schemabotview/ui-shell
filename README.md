@@ -3,14 +3,14 @@
 The GraphL concept-app shell: everything a content repo renders *around* its content.
 
 A content repo authors two things — **courses** (sections: scene + slide + narration) and **scenes**
-(react-flow diagrams / code cards, drawn by [`@graphlearning/flow`](../ui-flow)). Everything else —
+(diagrams / code cards, drawn by [`@graphlearning/flow`](../ui-flow)). Everything else —
 the hash router, the section composition, the slide panel, the course catalog, the narration
 channel, the whole stylesheet — was an identical copy in all seven repos. It lives here now.
 
 ## Use it
 
 ```tsx
-import '@graphlearning/flow/styles.css'   // engine: react-flow + the IBM Plex faces
+import '@graphlearning/flow/styles.css'   // engine: node styles + the IBM Plex faces
 import '@graphlearning/shell/styles.css'  // shell: layout + surface (it paints --bg)
 import './theme.css'                      // repo: --brand / --brand-hover / --accent-2
 import { ConceptApp } from '@graphlearning/shell'
@@ -117,9 +117,10 @@ regression is visible here before it reaches any content repo.
 ## Why a peer dependency on the engine
 
 `@graphlearning/flow` is a **peer**, not a dependency. Bundling it would put a second engine (and a
-second react-flow store) inside this package. The content repo pins the engine itself and must get
-exactly one copy — and a wide peer range (`>=0.5.0 <1.0.0`) means an engine minor does not force a
-republish of this package.
+second copy of the React tree it renders into) inside this package. The content repo pins the engine
+itself and must get exactly one copy — and a wide peer range (`>=0.8.0 <3.0.0`) means an engine
+release does not force a republish of this package. The range spans both engine majors: 2.0 dropped
+react-flow, so the recorders wait for `.flow-node, .react-flow__node` — whichever engine the repo pins.
 
 ## The toolchain
 

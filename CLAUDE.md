@@ -48,7 +48,7 @@ Port 5176 is deliberate: 5173 is a content repo, 5174 is `ui-flow`, and all thre
   that depends on the consuming app's vite config arrives as a prop.
 - **The engine is a peer.** Never a dependency — one engine copy per app, pinned by the app. The
   vite `external` list is load-bearing for the same reason: bundling `@graphlearning/flow` would
-  put a second engine (and a second react-flow store) inside this package.
+  put a second engine inside this package.
 - **`theme` is the DECK's declared look; the READER may override it, and capture ignores the reader.**
   `ConceptApp` takes `theme?: 'dark' | 'light'` and forwards it to every `SceneView`. One value,
   because a light scene inside dark chrome is a white rectangle on a dark page. A reader can
@@ -150,7 +150,7 @@ Port 5176 is deliberate: 5173 is a content repo, 5174 is `ui-flow`, and all thre
      section view, which is burned into video.
   3. `python-lab/src/components/SiteHeader.tsx` + the `.site*` block in its `App.css` — a
      hand-port. It cannot consume this package: the peer `@graphlearning/flow` would drag the
-     react-flow engine into an app with no scenes, and this stylesheet re-declares `.idx`,
+     render engine into an app with no scenes, and this stylesheet re-declares `.idx`,
      `.idx-card`, `.idx-card__num`, `.idx-card__title`, `.idx__grid`, `.idx__head` and
      `.idx__subject` — names that repo already owns with different markup. Deliberate differences:
      `kind` defaults to `"labs"`, and the bar's colour tokens are scoped to `.site` rather than
@@ -264,8 +264,6 @@ config and the path roots at once.
 
 ## Known doc drift
 
-- README's peer-dependency section still quotes the engine range as `>=0.5.0 <1.0.0`;
-  `package.json` has said `>=0.8.0 <2.0.0` since flow went 1.x. The reasoning around it is current.
 - The `graphl-capture-shots` bin (`scripts/capture-shots.mjs`) is a stub that exits 1, and is not in README's toolchain table.
 - The workspace `CLAUDE.md` lists `npm run check` among the pre-handover guards; no such script
   exists here (see Commands).

@@ -107,7 +107,7 @@ export const openApp = async () =>
 
 export async function gotoSection(page, appBase, slug) {
   await page.goto(`${appBase}?capture=1#/${slug}`, { waitUntil: 'networkidle2' })
-  await page.waitForSelector('.react-flow__node', { timeout: 15000 })
+  await page.waitForSelector('.flow-node, .react-flow__node', { timeout: 15000 })
   await page.evaluate(async () => {
     if (document.fonts?.ready) await document.fonts.ready
   })
