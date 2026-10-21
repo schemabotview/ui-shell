@@ -29,6 +29,10 @@ names all three as the pre-handover guard, but in this repo only `npm run build`
 `tsc --noEmit` exist. `build` already runs `tsc`, so it is the real gate; see the verification bar
 below for why a green build is a floor and not proof.
 
+**`npm publish` builds first** (`prepublishOnly`). 0.13.0 shipped the 0.12 stylesheet because it was
+published from a checkout whose `dist/` predated the change — `npm publish` packs `dist/` as it
+finds it. 0.13.1 is the same source, built.
+
 `build` is three steps chained with `&&` and the third is a plain `cp` — `dist/styles.css` is
 copied, not bundled, so a `styles.css` edit does NOT reach a consumer until a build runs. A
 consumer on a `file:` install sees `src/` changes only through `dist/`.
