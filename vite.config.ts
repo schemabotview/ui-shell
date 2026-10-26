@@ -14,8 +14,6 @@ export default defineConfig({
         'react/jsx-runtime',
         '@graphlearning/graphl-flow',
         'lucide-react',
-        'react-markdown',
-        'remark-gfm',
       ],
     },
   },

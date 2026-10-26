@@ -12,8 +12,8 @@ Read `README.md` first — it carries the integration, the three contracts and t
 
 ## What this package is, in one line
 
-`graphl-flow` draws a scene. **This draws everything else**: the router, the section composition
-(scene left / slide right, or the scene alone), the slide panel, the catalog, the narration channel,
+`graphl-flow` draws a scene. **This draws everything else**: the router, the section frame
+(the scene, full frame), the catalog, the narration channel,
 the stylesheet.
 
 ## Commands
@@ -43,8 +43,8 @@ Port 5176 is deliberate: 5173 is a content repo, 5175 is `graphl-flow`'s gallery
 
 ## Invariants
 
-- **`ConceptApp` and `SiteHeader` are the only exports.** `SectionView`, `CourseIndex`,
-  `SlidePanel`, `useNarration` and `useSlideScale` are deliberately withheld. The route contract
+- **`ConceptApp` and `SiteHeader` are the only exports.** `SectionView`, `CourseIndex` and
+  `useNarration` are deliberately withheld. The route contract
   (`#/<slug>`, `?capture=1`, `window.__scene.plan()`) is what every repo's recorder drives, and it
   only holds if every repo composes the pieces identically. Exporting the parts would ship a
   supported way to diverge again — which is the thing this package exists to end. Same reasoning as
@@ -67,8 +67,8 @@ Port 5176 is deliberate: 5173 is a content repo, 5175 is `graphl-flow`'s gallery
   ui-graphl, the footer uses lucide because every sibling in that cluster is lucide. `?capture=1`
   pins to the declared prop and ignores stored choice entirely; without that pin a 4K capture would
   depend on whoever last used the browser. Consequence of a repo going light: it must ALSO re-pick
-  `--brand` / `--brand-hover` / `--accent-2` — a brand tuned to glow on slate can fall under 3:1 on
-  off-white, and the shell cannot repick those without taking ownership of the one surface it
+  `--brand` — a brand tuned to glow on slate can fall under 3:1 on
+  off-white, and the shell cannot repick it without taking ownership of the one surface it
   deliberately leaves to the repo.
 - **The reader's choice IS the platform's.** Key `graphl:theme`, values `light`/`dark`/absent,
   switch `data-theme` on `<html>` — the same four things ui-graphl/theme.js owns, because every
@@ -80,7 +80,7 @@ Port 5176 is deliberate: 5173 is a content repo, 5175 is `graphl-flow`'s gallery
      neutral step would have to be labelled "Deck theme", which means nothing to a reader and costs
      them a press to get where they were going.
   2. At the catalog an absent value means "follow the OS"; here it means "follow the DECK". Letting
-     an OS setting silently repaint scenes, slides and narration that were built and reviewed in one
+     an OS setting silently repaint scenes and narration that were built and reviewed in one
      look is not the same decision as letting it repaint a directory page.
   The stored VALUES stay identical (`light`/`dark`/absent), so the two apps never disagree about an
   explicit choice — only the absence is read differently, and this one never writes it back.
@@ -91,7 +91,7 @@ Port 5176 is deliberate: 5173 is a content repo, 5175 is `graphl-flow`'s gallery
   `NarrationBar` sits between the two footer clusters (inside the same `!capture` footer, so a
   recording can never show it). Three things fixed its shape:
   1. `timeupdate` fires ~4x a second. Lifting position into `ConceptApp` would re-render `<Scene>`
-     and the react-markdown slide four times a second for a 4px bar, so `useNarration` hands out the
+     four times a second for a 4px bar, so `useNarration` hands out the
      element and the bar subscribes to it directly. Nothing else in the shell learns that playback
      has a position.
   2. In PORTRAIT it is `display: none`. The control row is already full at phone width, and the only
@@ -131,28 +131,21 @@ Port 5176 is deliberate: 5173 is a content repo, 5175 is `graphl-flow`'s gallery
   first section — but the recorder deliberately lands on `#/<course>` to read
   `window.__scene.plan()`, so the redirect is guarded by `!capture`. Breaking that guard breaks
   every recorder.
-- **A section with no `slide` is SCENE-ONLY, and absence is the only switch.** No prop, no repo-level
-  mode: `.stage--scene-only` is set from `section.slide` alone, so a repo migrates section by section
-  and every section that keeps its slide stays byte-identical (all 86 python-ct frames at 4K,
-  measured). In landscape the eyebrow and the section title share ONE header row — a 1fr/auto/1fr
-  grid, so the title is centred on the frame, not on what is left beside the eyebrow — and the scene
-  drops out of the flex row into an absolute box at `top: 6.5vh`. Header bottom 121 px < scene top
-  140 px at 3840×2160 (the scene is 2020 px tall, up from 1933 when the title had its own row);
-  footer top 1016 at 1920×1080 sits over the scene's bottom margin. Changing that reserve re-frames
-  every scene-only
-video. Portrait needed nothing — the title already showed there — beyond hiding the toggle.
+- **A section frame is the SCENE ALONE** (1.0): no header, no eyebrow, no slide panel. The title
+  and course are in the video's own title and the narration; the facts a slide carried belong in
+  the scene (tables, notes, bullets). `.scene-area` fills the frame — landscape `inset: 0`, portrait
+  keeps `bottom: 7.5vh` for the one-row control footer. So the scene area is exactly 16:9 at 4K
+  (`SCENE_ASPECT`), and the footer, which floats over it in landscape, exists only off `?capture=1`.
+  Re-adding any chrome over a section re-frames every recorded video — a major.
 - **`--idx-accent` does not exist on a section.** It is declared on `.idx` — the catalog column — so
   every `var(--idx-accent)` in the `.reel-foot*` rules resolved to nothing and the control hover
   colour and focus ring were silently dead. Those now use `--brand`, which is what `.idx` aliases it
-  to, and so does `.slide-toggle` (it shares one rule block with `.reel-foot__ctrl`).
+  to.
 - **`--ink-rgb` is why light was additive.** ~20 `rgba(255,255,255,a)` literals in `styles.css` were
   all "ink at some alpha", so parameterising the CHANNELS converts every one by substitution and
   leaves dark byte-identical — one token instead of eleven alpha tokens. `--line`, `--header-bg`,
   `--hover` and `--idx-line` are alpha over it and so flip for free. `--scrim` is the exception and
   must stay its own token: it follows `--bg`, not the ink, or a light button comes out near-black.
-- **`eyebrow` is a prop, not a derivation.** It is burned into every recorded video, and two repos
-  brand themselves differently from their title (`Apache Spark` → `SPARK`,
-  `Databricks Data Engineer` → `DATABRICKS`).
 - **The toggle is a FOURTH thing that must land in all three site bars.** `ThemeToggle` +
   `.site__icon` + `.theme-swap` exist here and at ui-graphl; python-lab's hand-port does NOT have it
   yet, so the bar currently differs across the three. See the site-bar invariant below.

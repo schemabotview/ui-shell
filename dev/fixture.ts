@@ -33,8 +33,8 @@ export const SCENES: Record<string, SceneModel> = {
         id: 'facts',
         icon: 'file',
         tone: 'infra',
-        title: 'What the slide used to say',
-        bullets: ['The data the narration names is in the frame', 'No panel competes with the diagram', 'Title and eyebrow sit on the frame itself'],
+        title: 'The frame carries the facts',
+        bullets: ['The data the narration names is in the frame', 'No panel competes with the diagram', 'Narration carries the title'],
       },
     ],
     edges: [
@@ -62,8 +62,6 @@ export const SCENES: Record<string, SceneModel> = {
 
 export const getScene = (id: string) => SCENES[id]
 
-const slide = (title: string, body: string) => `## ${title}\n\n${body}`
-
 export const COURSES: Record<string, Course> = {
   alpha: {
     id: 'alpha',
@@ -74,27 +72,18 @@ export const COURSES: Record<string, Course> = {
         title: 'A diagram scene',
         scene: 'fx-flow',
         focus: 'b',
-        slide: slide(
-          'A diagram scene',
-          'The scene is a **diagram**, laid out entirely by the engine, with `Transform` in **focus**.\n\n### What to check\n— The eyebrow reads `FIXTURE · ALPHA` in `--brand`\n— This `###` heading is in `--accent-2`\n— `inline code` sits on the slide surface\n\n### And the controls\n— `←` / `→` seek narration ±10s (no clip → walk sections), `Shift`+`←` / `→` always walk, `Space` toggles narration\n— The footer pager shows `1 / 3`',
-        ),
         narration: 'A diagram scene, laid out by the engine.',
       },
       {
         id: 'code',
         title: 'A code scene',
         scene: 'fx-code',
-        slide: slide(
-          'A code scene',
-          'The same composition with a **code card** on the left.\n\n### Token colours\nThese come from `@graphlearning/graphl-flow/styles.css`, not from this package — if the code above is flat grey, the engine stylesheet is missing.',
-        ),
         narration: 'A code scene, rendered by the engine code node.',
       },
       {
         id: 'missing',
         title: 'A missing scene',
         scene: 'fx-does-not-exist',
-        slide: slide('A missing scene', 'This section names a scene id that is not in the registry — the shell should render its `no scene:` fallback rather than crashing.'),
         narration: 'A deliberately missing scene.',
       },
     ],
@@ -107,23 +96,18 @@ export const COURSES: Record<string, Course> = {
         id: 'rollover',
         title: 'Crossing a course boundary',
         scene: 'fx-flow',
-        slide: slide(
-          'Crossing a course boundary',
-          'You reached this by pressing `→` on the **last section of Alpha**.\n\n### Why this fixture has two courses\nSection nav walks the whole catalog as one stream, so a course boundary is just another step. With one course that behaviour is invisible.',
-        ),
         narration: 'Crossing a course boundary.',
       },
       {
-        id: 'scene-only',
-        title: 'A scene-only section',
+        id: 'full',
+        title: 'A data-dense scene',
         scene: 'fx-full',
-        narration: 'A section with no slide: the scene takes the whole frame.',
+        narration: 'Table, flow and facts in one frame.',
       },
       {
         id: 'end',
         title: 'The end of the stream',
         scene: 'fx-code',
-        slide: slide('The end of the stream', 'The last section of the last course. `→` here returns to the catalog — the only place it does.'),
         narration: 'The end of the stream.',
       },
     ],

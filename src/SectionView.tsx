@@ -1,8 +1,6 @@
-import { useState } from 'react'
 import { Home, Volume2, VolumeX, ChevronLeft, ChevronRight, Moon, Sun } from 'lucide-react'
 import { Scene, type ThemeKey } from '@graphlearning/graphl-flow'
 import type { Section, SceneLookup } from './types'
-import { SlidePanel } from './SlidePanel'
 import { NarrationBar } from './NarrationBar'
 import { themeLabel } from './ThemeToggle'
 
@@ -12,8 +10,6 @@ export function SectionView({
   section,
   getScene,
   capture,
-  eyebrow,
-  header,
   index,
   total,
   onHome,
@@ -28,8 +24,6 @@ export function SectionView({
   section: Section
   getScene: SceneLookup
   capture: boolean
-  eyebrow: string
-  header: boolean
   index: number
   total: number
   onHome: () => void
@@ -41,21 +35,11 @@ export function SectionView({
   theme: ThemeKey
   onToggleTheme?: () => void
 }) {
-  const [open, setOpen] = useState(false)
   const scene = getScene(section.scene)
   if (!scene) return <div className="stage stage--missing">no scene: {section.scene}</div>
   const dark = theme === 'dark'
-  const slide = section.slide
   return (
-    <div className={`stage stage--section${slide ? '' : ' stage--scene-only'}${header ? '' : ' stage--no-head'}`}>
-      {header && (
-        <header className="reel-head">
-          <button className="reel-head__eyebrow" onClick={onHome} {...tip('Back to catalog (Esc)')}>
-            {eyebrow}
-          </button>
-          <h1 className="reel-head__title">{section.title}</h1>
-        </header>
-      )}
+    <div className="stage stage--section">
       {!capture && (
         <footer className="reel-foot reel-foot--controls">
           <span className="reel-foot__grp">
@@ -92,12 +76,6 @@ export function SectionView({
       <div className="scene-area">
         <Scene scene={scene} focus={section.focus} theme={theme} />
       </div>
-      {!capture && slide && (
-        <button className="slide-toggle" onClick={() => setOpen((o) => !o)} aria-label={open ? 'Hide slide' : 'Show slide'}>
-          {open ? '›' : '‹'}
-        </button>
-      )}
-      {slide && <SlidePanel slide={slide} open={open} />}
     </div>
   )
 }

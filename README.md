@@ -2,9 +2,9 @@
 
 The GraphL concept-app shell: everything a content repo renders *around* its content.
 
-A content repo authors two things — **courses** (sections: scene + optional slide + narration) and **scenes**
+A content repo authors two things — **courses** (sections: scene + narration) and **scenes**
 (diagrams / code cards, drawn by [`@graphlearning/graphl-flow`](../graphl-flow)). Everything else —
-the hash router, the section composition, the slide panel, the course catalog, the narration
+the hash router, the section frame, the course catalog, the narration
 channel, the whole stylesheet — was an identical copy in all seven repos. It lives here now.
 
 ## Use it
@@ -12,14 +12,13 @@ channel, the whole stylesheet — was an identical copy in all seven repos. It l
 ```tsx
 import '@graphlearning/graphl-flow/styles.css'   // engine: node styles + the IBM Plex faces
 import '@graphlearning/shell/styles.css'  // shell: layout + surface (it paints --bg)
-import './theme.css'                      // repo: --brand / --brand-hover / --accent-2
+import './theme.css'                      // repo: --brand
 import { ConceptApp } from '@graphlearning/shell'
 import { COURSES } from './content'
 import { getScene } from './scenes'
 
 <ConceptApp
   subject="Apache Spark"        // the catalog's h1
-  eyebrow="SPARK"               // the section eyebrow prefix — omit when it is subject.toUpperCase()
   courses={COURSES}
   getScene={getScene}
   audioBase={import.meta.env.BASE_URL}
@@ -68,30 +67,18 @@ the page; the engine paints the scene area. Change one and change the other.
 app's* build time (its vite `base`, e.g. `/python/`). This package is built separately, so a literal
 here would bake in the wrong base and 404 on every deployed site.
 
-## Scene-only sections
+## A section is the scene alone
 
-`slide` is optional. A section **without** one renders scene-only: no slide panel, no toggle, and in
-landscape the scene takes the whole frame width (3840 px at 4K, against 2227 px beside a slide)
-under one header row — the eyebrow on the left, the section title centred — because there is no
-slide to carry the title. Portrait is unchanged except that the toggle disappears.
-
-A section **with** a slide renders exactly as before — measured on python-ct's 86 sections at
-3840×2160, every frame is byte-identical — so a repo migrates one section at a time.
-
-Dropping the slide does not by itself make a scene larger. A tall scene is fitted by the frame's
-HEIGHT and gains nothing from the extra width; it pays off when the scene is re-authored to use the
-width (side-by-side `flow: 'LR'`, and the slide's facts moved into tables, lists and notes).
+The section view draws the scene over the whole frame — no header, no eyebrow, no slide panel —
+so at 3840×2160 the scene area is the full 16:9 (`SCENE_ASPECT`). The section's title lives in
+the video's title and the narration; what a slide used to say belongs in the scene itself
+(tables, notes, bullets). Off `?capture=1`, a control footer floats over the frame's bottom edge.
 
 ## The per-repo surface
 
-Three CSS tokens, `subject`, and (when it differs) `eyebrow`. That is all that legitimately varies
-between the seven concept apps.
-
-| token | what it colours |
-|---|---|
-| `--brand` | section eyebrow, slide `h2`, catalog accent, brand-home hover |
-| `--brand-hover` | the eyebrow's hover state — a lighter tint of `--brand` |
-| `--accent-2` | the slide's `###` subheading — a counter tone to `--brand` |
+One CSS token, `--brand`, and `subject`. That is all that legitimately varies between the concept
+apps. `--brand` colours the catalog accent, the brand-home hover and the footer controls' hover
+and focus ring.
 
 ## The route contract
 
@@ -149,7 +136,10 @@ to shell 0.14 + `@graphlearning/flow`, which keep working.
    `title` / `sub`, `tone`, edges as `{ from, to }`). `getScene` returns a `SceneModel`.
 4. `section.focus` works as before: the shell passes it to the engine, which rings that node (any
    id — a table row `table.row` or a code line `code.L12` included) without moving anything.
-5. Re-record. Routes, `?capture=1`, `window.__scene.plan()` and the 2.4s pulse loop are unchanged.
+5. Drop `slide` from every section and the `eyebrow` / `sectionHeader` props from `ConceptApp`
+   (both removed in 1.0); move any fact a slide carried into the scene. `react-markdown` and
+   `remark-gfm` are no longer peers — uninstall them. `--brand-hover` / `--accent-2` are unused.
+6. Re-record. Routes, `?capture=1`, `window.__scene.plan()` and the 2.4s pulse loop are unchanged.
 
 ## The toolchain
 

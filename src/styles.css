@@ -6,15 +6,12 @@
 
   --surface-lift: #2f333d;
   --surface-lift-2: #22262e;
-  --slide-ink: #c8cdd6;
   --foot-dim: #5b616f;
   --foot-dimmer: #4b515e;
 
   --scrim: rgba(26, 29, 35, 0.9);
 
   --brand: #8b909c;
-  --brand-hover: #a8adb8;
-  --accent-2: #c8cdd6;
   --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
   --text: var(--fg);
@@ -34,7 +31,6 @@
 
   --surface-lift: #ffffff;
   --surface-lift-2: #eef1f5;
-  --slide-ink: #333a45;
   --foot-dim: #7a8493;
   --foot-dimmer: #98a2b1;
   --muted: #5a6675;
@@ -83,27 +79,6 @@ body {
   position: absolute;
   inset: 0;
 }
-.slide-panel {
-  position: absolute;
-  top: 0;
-  right: 0;
-  height: 100%;
-  width: 100%;
-  display: flex;
-  align-items: safe center;
-  justify-content: center;
-  overflow: auto;
-  box-sizing: border-box;
-  background: var(--surface-lift);
-  border-left: 1px solid rgba(var(--ink-rgb), 0.09);
-  transform: translateX(100%);
-  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 10;
-}
-.slide-panel--open {
-  transform: translateX(0);
-}
-.slide-toggle,
 .reel-foot__ctrl {
   width: 36px;
   height: 36px;
@@ -115,26 +90,15 @@ body {
   transition: color 0.15s, border-color 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
-.slide-toggle {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  z-index: 11;
-  font-size: 19px;
-  line-height: 1;
-}
 @media (hover: hover) {
-  .slide-toggle:hover,
-  .reel-foot__ctrl:hover {
+    .reel-foot__ctrl:hover {
     color: var(--brand);
     border-color: var(--brand);
   }
 }
-.slide-toggle:focus:not(:focus-visible),
 .reel-foot__ctrl:focus:not(:focus-visible) {
   outline: none;
 }
-.slide-toggle:focus-visible,
 .reel-foot__ctrl:focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
@@ -254,42 +218,6 @@ body {
   color: var(--brand);
 }
 
-.reel-head {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 8;
-  padding: 3.75vh 6vw 0;
-  pointer-events: none;
-}
-.reel-head__eyebrow {
-  display: inline-block;
-  margin: 0 0 1.6vh;
-  padding: 0;
-  border: 0;
-  background: none;
-  font-family: inherit;
-  font-size: 1.4vh;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--brand);
-  pointer-events: auto;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-.reel-head__eyebrow:hover {
-  color: var(--brand-hover);
-}
-.reel-head__title {
-  margin: 0;
-  font-size: 3.1vh;
-  font-weight: 700;
-  line-height: 1.08;
-  letter-spacing: -0.02em;
-  color: var(--fg);
-}
 .reel-foot {
   position: absolute;
   left: 0;
@@ -310,39 +238,11 @@ body {
 }
 
 .stage--section .scene-area {
-  top: 12.5vh;
   bottom: 7.5vh;
-}
-/* No header drawn (ConceptApp's `sectionHeader`, off by default): the scene area takes the band
-   the header would have held. */
-.stage--section.stage--no-head .scene-area {
-  top: 0;
 }
 
 @media (orientation: landscape) {
-  .stage--section {
-    display: flex;
-  }
-  .scene-area {
-    position: relative;
-    flex: 1 1 auto;
-    min-width: 0;
-    height: 100%;
-    inset: auto;
-  }
-
-  .reel-head {
-    right: 42%;
-    padding: 2.8vh 0 0 1.9vw;
-  }
-  .reel-head__title {
-    display: none;
-  }
-  .reel-head__eyebrow {
-    margin-bottom: 0;
-  }
   .reel-foot {
-    right: 42%;
     padding: 0 1.9vw 2.6vh;
   }
 
@@ -352,132 +252,10 @@ body {
     margin: 0 1.4vw;
   }
 
+  /* Landscape is the recorded frame: the footer floats over the scene, so the scene takes it all. */
   .stage--section .scene-area {
-    top: auto;
-    bottom: auto;
-  }
-  .slide-panel {
-    position: relative;
-    top: auto;
-    right: auto;
-    height: 100%;
-    width: auto;
-    flex: 0 0 42%;
-    transform: none;
-  }
-  .slide-toggle {
-    display: none;
-  }
-
-  .stage--section .slide-panel__scaler {
-    padding: 0 60px;
-    --fs-body: 26px;
-  }
-
-  .stage--scene-only .reel-head,
-  .stage--scene-only .reel-foot {
-    right: 0;
-  }
-  .stage--scene-only .reel-head {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    padding-right: 1.9vw;
-  }
-  .stage--scene-only .reel-head__eyebrow {
-    justify-self: start;
-    margin-bottom: 0;
-  }
-  .stage--scene-only .reel-head__title {
-    display: block;
-    font-size: 2.6vh;
-    text-align: center;
-  }
-  .stage--section.stage--scene-only .scene-area {
-    position: absolute;
-    top: 6.5vh;
-    right: 0;
     bottom: 0;
-    left: 0;
-    height: auto;
   }
-  /* AFTER the scene-only rule on purpose: same specificity, so this only wins on source order. */
-  .stage--section.stage--no-head .scene-area {
-    top: 0;
-  }
-}
-
-.slide-panel__scaler {
-  box-sizing: border-box;
-  padding: 0 40px;
-  color: var(--slide-ink);
-  --fs-body: 31px;
-  --fs-title: calc(var(--fs-body) * 1.73);
-  --fs-heading: calc(var(--fs-body) * 1.2);
-  --fs-code: calc(var(--fs-body) * 0.78);
-  font-size: var(--fs-body);
-  line-height: 1.45;
-}
-.slide-panel__scaler > :first-child {
-  margin-top: 0;
-}
-.slide-panel__scaler > :last-child {
-  margin-bottom: 0;
-}
-
-.slide-panel__scaler h2 {
-  margin: 0 0 20px;
-  font-size: var(--fs-title);
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-  color: var(--brand);
-}
-
-.slide-panel__scaler h3 {
-  margin: 30px 0 12px;
-  font-size: var(--fs-heading);
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-  color: var(--accent-2);
-}
-.slide-panel__scaler p {
-  margin: 0 0 16px;
-}
-.slide-panel__scaler ul {
-  margin: 0 0 18px;
-  padding-left: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.slide-panel__scaler li {
-  position: relative;
-  padding-left: 30px;
-}
-.slide-panel__scaler ul > li::before {
-  content: '—';
-  position: absolute;
-  left: 0;
-  color: rgba(var(--ink-rgb), 0.28);
-}
-.slide-panel__scaler strong {
-  color: rgba(var(--ink-rgb), 0.95);
-  font-weight: 700;
-}
-.slide-panel__scaler em {
-  font-style: italic;
-  color: rgba(var(--ink-rgb), 0.85);
-}
-.slide-panel__scaler code {
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: var(--fs-code);
-  padding: 2px 7px;
-  border-radius: 5px;
-  background: rgba(var(--ink-rgb), 0.08);
-  color: rgba(var(--ink-rgb), 0.9);
 }
 
 .site {
