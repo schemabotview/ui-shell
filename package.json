@@ -1,6 +1,6 @@
 {
   "name": "@graphlearning/shell",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "The GraphL concept-app shell — hash router, section view (the scene, full frame), course catalog and narration channel, plus the capture/record/publish toolchain that drives them. A content repo supplies courses + scenes.",
   "license": "UNLICENSED",
   "repository": {

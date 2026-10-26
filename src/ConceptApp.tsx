@@ -157,7 +157,7 @@ export function ConceptApp({
       )}
       {scene ? (
         <div className="stage">
-          <Scene scene={scene} theme={activeTheme} />
+          <Scene key={id} scene={scene} theme={activeTheme} />
         </div>
       ) : (
         <div className="stage stage--missing">no scene or slug: {id}</div>

@@ -74,7 +74,11 @@ export function SectionView({
         </footer>
       )}
       <div className="scene-area">
-        <Scene scene={scene} focus={section.focus} theme={theme} />
+        {/* Keyed by scene id: a new scene gets a fresh <Scene>. Unkeyed, hash navigation reused one
+            instance, so the next scene was measured under the previous one's fit (sub-pixel route
+            drift) and its data-fit could read "ready" before it settled — the recorder's signal.
+            Sections that reuse one scene with a different focus keep the instance; nothing moves. */}
+        <Scene key={section.scene} scene={scene} focus={section.focus} theme={theme} />
       </div>
     </div>
   )

@@ -137,6 +137,13 @@ Port 5176 is deliberate: 5173 is a content repo, 5175 is `graphl-flow`'s gallery
   keeps `bottom: 7.5vh` for the one-row control footer. So the scene area is exactly 16:9 at 4K
   (`SCENE_ASPECT`), and the footer, which floats over it in landscape, exists only off `?capture=1`.
   Re-adding any chrome over a section re-frames every recorded video — a major.
+- **`<Scene>` is KEYED by its scene id** (1.0.1) — `section.scene` in `SectionView`, the route id in
+  the bare scene view. Navigation is a hash change, so an unkeyed `<Scene>` was one instance for the
+  whole visit: the next scene was measured under the previous one's fit (edge routes off their
+  faces by ~0.14px) and its `data-fit` read `ready` on the first frame after navigation, before it had
+  settled — the very signal the recorders wait on (`gotoSection`'s 700ms sleep masked it). Keyed, the
+  first frame reads `pending` and the drift is 0. Consecutive sections that reuse one scene with a
+  different `focus` keep the instance — same scene, same measurements, nothing moves.
 - **`--idx-accent` does not exist on a section.** It is declared on `.idx` — the catalog column — so
   every `var(--idx-accent)` in the `.reel-foot*` rules resolved to nothing and the control hover
   colour and focus ring were silently dead. Those now use `--brand`, which is what `.idx` aliases it
