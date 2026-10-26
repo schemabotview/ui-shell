@@ -29,7 +29,7 @@
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
-    "@graphlearning/graphl-flow": "^0.1.0",
+    "@graphlearning/graphl-flow": "^0.2.0",
     "esbuild": ">=0.20",
     "lucide-react": "^1.28.0",
     "puppeteer": ">=24",
@@ -37,7 +37,7 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@graphlearning/graphl-flow": "^0.1.0",
+    "@graphlearning/graphl-flow": "^0.2.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^4.3.4",
