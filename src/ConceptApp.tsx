@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { SceneView, type ThemeKey } from '@graphlearning/flow'
+import { Scene, type ThemeKey } from '@graphlearning/graphl-flow'
 import { SectionView } from './SectionView'
 import { allSections, slugOf, type Course, type SceneLookup } from './types'
 import { CourseIndex } from './CourseIndex'
@@ -166,7 +166,7 @@ export function ConceptApp({
       )}
       {scene ? (
         <div className="stage">
-          <SceneView scene={scene} theme={activeTheme} />
+          <Scene scene={scene} theme={activeTheme} />
         </div>
       ) : (
         <div className="stage stage--missing">no scene or slug: {id}</div>

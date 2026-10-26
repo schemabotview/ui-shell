@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Home, Volume2, VolumeX, ChevronLeft, ChevronRight, Moon, Sun } from 'lucide-react'
-import { SceneView, type ThemeKey } from '@graphlearning/flow'
+import { Scene, type ThemeKey } from '@graphlearning/graphl-flow'
 import type { Section, SceneLookup } from './types'
 import { SlidePanel } from './SlidePanel'
 import { NarrationBar } from './NarrationBar'
@@ -90,7 +90,7 @@ export function SectionView({
         </footer>
       )}
       <div className="scene-area">
-        <SceneView scene={scene} focusId={section.focus} theme={theme} />
+        <Scene scene={scene} focus={section.focus} theme={theme} />
       </div>
       {!capture && slide && (
         <button className="slide-toggle" onClick={() => setOpen((o) => !o)} aria-label={open ? 'Hide slide' : 'Show slide'}>

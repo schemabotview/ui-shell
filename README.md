@@ -3,14 +3,14 @@
 The GraphL concept-app shell: everything a content repo renders *around* its content.
 
 A content repo authors two things — **courses** (sections: scene + optional slide + narration) and **scenes**
-(diagrams / code cards, drawn by [`@graphlearning/flow`](../ui-flow)). Everything else —
+(diagrams / code cards, drawn by [`@graphlearning/graphl-flow`](../graphl-flow)). Everything else —
 the hash router, the section composition, the slide panel, the course catalog, the narration
 channel, the whole stylesheet — was an identical copy in all seven repos. It lives here now.
 
 ## Use it
 
 ```tsx
-import '@graphlearning/flow/styles.css'   // engine: node styles + the IBM Plex faces
+import '@graphlearning/graphl-flow/styles.css'   // engine: node styles + the IBM Plex faces
 import '@graphlearning/shell/styles.css'  // shell: layout + surface (it paints --bg)
 import './theme.css'                      // repo: --brand / --brand-hover / --accent-2
 import { ConceptApp } from '@graphlearning/shell'
@@ -60,9 +60,9 @@ they drift and the seam shows on every crossing.
 **1. Import order.** The three stylesheets cascade: engine, shell, theme. The theme must come last
 or the repo's brand tokens lose to the shell's neutral defaults.
 
-**2. The shell paints the canvas.** `SceneView` draws its dots at `#2a2f38` and assumes a dark
-surface behind it. That surface (`--bg: #1a1d23`) is defined in this package's stylesheet — it is
-the contract each repo used to re-declare by hand.
+**2. One canvas colour.** The shell's `--bg` (`#1a1d23` dark, `#f7f8fa` light) and the engine's
+own canvas are the SAME value, so a scene sits in the frame with no edge round it. The shell owns
+the page; the engine paints the scene area. Change one and change the other.
 
 **3. `audioBase` must be passed in.** `import.meta.env.BASE_URL` is replaced at the *consuming
 app's* build time (its vite `base`, e.g. `/python/`). This package is built separately, so a literal
@@ -130,11 +130,26 @@ regression is visible here before it reaches any content repo.
 
 ## Why a peer dependency on the engine
 
-`@graphlearning/flow` is a **peer**, not a dependency. Bundling it would put a second engine (and a
-second copy of the React tree it renders into) inside this package. The content repo pins the engine
-itself and must get exactly one copy — and a wide peer range (`>=0.8.0 <3.0.0`) means an engine
-release does not force a republish of this package. The range spans both engine majors: 2.0 dropped
-react-flow, so the recorders wait for `.flow-node, .react-flow__node` — whichever engine the repo pins.
+`@graphlearning/graphl-flow` is a **peer**, not a dependency. Bundling it would put a second engine
+(and a second copy of the React tree it renders into) inside this package. The content repo pins the
+engine itself and must get exactly one copy. The recorders wait for the engine's own ready signal,
+`.gf-scene[data-fit="ready"]` — fonts loaded, edges routed, the fit applied — rather than a fixed
+delay or a node selector.
+
+## Migrating a content repo from 0.x (`@graphlearning/flow`) to 1.0
+
+1.0 renders scenes with `@graphlearning/graphl-flow` instead of `@graphlearning/flow`. The two engines
+have DIFFERENT scene models, so a repo moves when its scenes are ported — until then it stays pinned
+to shell 0.14 + `@graphlearning/flow`, which keep working.
+
+1. `npm uninstall @graphlearning/flow && npm i @graphlearning/graphl-flow @graphlearning/shell@^1`
+2. `main.tsx`: import `@graphlearning/graphl-flow/styles.css` in place of `@graphlearning/flow/styles.css`
+   (still first in the cascade).
+3. Port each scene file to the graphl-flow model (`type: 'group' | 'item' | 'table' | 'code' | …`,
+   `title` / `sub`, `tone`, edges as `{ from, to }`). `getScene` returns a `SceneModel`.
+4. `section.focus` works as before: the shell passes it to the engine, which rings that node (any
+   id — a table row `table.row` or a code line `code.L12` included) without moving anything.
+5. Re-record. Routes, `?capture=1`, `window.__scene.plan()` and the 2.4s pulse loop are unchanged.
 
 ## The toolchain
 
@@ -176,7 +191,7 @@ timing is unchanged.
 |---|---|---|
 | `LOOP_CYCLES` | `1` | window length, in pulse periods → 2.4s |
 | `LOOP_MS` | — | window length in ms, snapped to a whole period |
-| `PULSE_S` | `2.4` | the engine's `animateMotion dur` — must match `ui-flow`'s `FlowEdge` |
+| `PULSE_S` | `2.4` | the engine's `animateMotion dur` — must match `PULSE_S` in graphl-flow's `Edges.tsx` |
 | `LOOP_LEAD_S` | `0.5` | discarded screencast ramp-up before the window |
 | `NO_LOOP` | — | set to hold for the whole wav, as before |
 

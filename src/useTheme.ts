@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { ThemeKey } from '@graphlearning/flow'
+import type { ThemeKey } from '@graphlearning/graphl-flow'
 
 const KEY = 'graphl:theme'
 

@@ -1,57 +1,55 @@
-import type { Scene } from '@graphlearning/flow'
+import type { SceneModel } from '@graphlearning/graphl-flow'
 import type { Course } from '../src/types'
 
-export const SCENES: Record<string, Scene> = {
+export const SCENES: Record<string, SceneModel> = {
   'fx-flow': {
-    id: 'fx-flow',
     nodes: [
-      { id: 'a', label: 'Source', sub: 'where it starts', pattern: 'storage' },
-      { id: 'b', label: 'Transform', sub: 'the middle', pattern: 'service' },
-      { id: 'c', label: 'Sink', sub: 'where it lands', pattern: 'storage' },
+      { type: 'item', id: 'a', icon: 'database', title: 'Source', sub: 'where it starts', tone: 'store' },
+      { type: 'item', id: 'b', icon: 'workflow', title: 'Transform', sub: 'the middle', tone: 'infra' },
+      { type: 'item', id: 'c', icon: 'database', title: 'Sink', sub: 'where it lands', tone: 'store' },
     ],
     edges: [
-      { source: 'a', target: 'b' },
-      { source: 'b', target: 'c' },
+      { from: 'a', to: 'b' },
+      { from: 'b', to: 'c' },
     ],
   },
   'fx-full': {
-    id: 'fx-full',
-    flow: 'LR',
+    dir: 'row',
     nodes: [
-      { id: 'in', label: 'Orders', sub: 'one row per order line', pattern: 'storage', icon: 'table' },
+      { type: 'item', id: 'in', icon: 'table', title: 'Orders', sub: 'one row per order line', tone: 'store' },
       {
+        type: 'table',
         id: 'rows',
-        kind: 'table',
-        label: 'order_lines',
-        headers: ['order', 'sku', 'qty', 'price'],
-        values: [
-          ['A-1001', 'TEA-01', '3', '4.50'],
-          ['A-1001', 'MUG-02', '1', '8.00'],
-          ['A-1002', 'TEA-01', '2', '4.50'],
+        title: 'order_lines',
+        columns: ['order', 'sku', 'qty', 'price'],
+        rows: [
+          ['A-1001', 'TEA-01', 3, '4.50'],
+          ['A-1001', 'MUG-02', 1, '8.00'],
+          ['A-1002', 'TEA-01', 2, '4.50'],
         ],
       },
       {
+        type: 'item',
         id: 'facts',
-        kind: 'list',
-        label: 'What the slide used to say',
-        icon: 'scroll',
-        pattern: 'service',
-        items: ['The data the narration names is in the frame', 'No panel competes with the diagram', 'Title and eyebrow sit on the frame itself'],
+        icon: 'file',
+        tone: 'infra',
+        title: 'What the slide used to say',
+        bullets: ['The data the narration names is in the frame', 'No panel competes with the diagram', 'Title and eyebrow sit on the frame itself'],
       },
     ],
     edges: [
-      { source: 'in', target: 'rows' },
-      { source: 'rows', target: 'facts' },
+      { from: 'in', to: 'rows' },
+      { from: 'rows', to: 'facts' },
     ],
   },
   'fx-code': {
-    id: 'fx-code',
     nodes: [
       {
+        type: 'code',
         id: 'src',
-        kind: 'code',
         filename: 'fixture.py',
-        label: [
+        lang: 'python',
+        code: [
           '# — the shell renders, the engine draws —',
           'rows = [r for r in read("in.csv") if r.ok]',
           'total = sum(r.amount for r in rows)',
@@ -59,7 +57,6 @@ export const SCENES: Record<string, Scene> = {
         ].join('\n'),
       },
     ],
-    edges: [],
   },
 }
 
@@ -76,9 +73,10 @@ export const COURSES: Record<string, Course> = {
         id: 'diagram',
         title: 'A diagram scene',
         scene: 'fx-flow',
+        focus: 'b',
         slide: slide(
           'A diagram scene',
-          'The scene is a **diagram**, laid out entirely by the engine.\n\n### What to check\n— The eyebrow reads `FIXTURE · ALPHA` in `--brand`\n— This `###` heading is in `--accent-2`\n— `inline code` sits on the slide surface\n\n### And the controls\n— `←` / `→` seek narration ±10s (no clip → walk sections), `Shift`+`←` / `→` always walk, `Space` toggles narration\n— The footer pager shows `1 / 3`',
+          'The scene is a **diagram**, laid out entirely by the engine, with `Transform` in **focus**.\n\n### What to check\n— The eyebrow reads `FIXTURE · ALPHA` in `--brand`\n— This `###` heading is in `--accent-2`\n— `inline code` sits on the slide surface\n\n### And the controls\n— `←` / `→` seek narration ±10s (no clip → walk sections), `Shift`+`←` / `→` always walk, `Space` toggles narration\n— The footer pager shows `1 / 3`',
         ),
         narration: 'A diagram scene, laid out by the engine.',
       },
@@ -88,7 +86,7 @@ export const COURSES: Record<string, Course> = {
         scene: 'fx-code',
         slide: slide(
           'A code scene',
-          'The same composition with a **code card** on the left.\n\n### Token colours\nThese come from `@graphlearning/flow/styles.css`, not from this package — if the code above is flat grey, the engine stylesheet is missing.',
+          'The same composition with a **code card** on the left.\n\n### Token colours\nThese come from `@graphlearning/graphl-flow/styles.css`, not from this package — if the code above is flat grey, the engine stylesheet is missing.',
         ),
         narration: 'A code scene, rendered by the engine code node.',
       },

@@ -41,7 +41,7 @@ plan = plan.filter((p) => p.course === course && (only.length === 0 || only.incl
 let n = 0
 for (const p of plan) {
   await page.goto(`${url}?capture=1#/${p.slug}`, { waitUntil: 'networkidle2' })
-  await page.waitForSelector('.flow-node, .react-flow__node', { timeout: 15000 })
+  await page.waitForSelector('.gf-scene[data-fit="ready"]', { timeout: 15000 })
   await page.evaluate(async () => { if (document.fonts?.ready) await document.fonts.ready })
   await sleep(900)
   const file = join(outDir, `${String(++n).padStart(2, '0')}-${p.id}.png`)

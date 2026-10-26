@@ -83,7 +83,7 @@ async function makeThumb(course, opt) {
     if (!sec) throw new Error(`section ${opt.section} out of range (course has ${plan.length})`)
 
     await page.goto(`${appBase}?capture=1#/${sec.slug}`, { waitUntil: 'networkidle2' })
-    await page.waitForSelector('.flow-node, .react-flow__node', { timeout: 15000 })
+    await page.waitForSelector('.gf-scene[data-fit="ready"]', { timeout: 15000 })
     await page.evaluate(async () => { if (document.fonts?.ready) await document.fonts.ready })
     await sleep(opt.at)
 

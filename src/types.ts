@@ -1,4 +1,4 @@
-import type { Scene } from '@graphlearning/flow'
+import type { SceneModel as Scene } from '@graphlearning/graphl-flow'
 
 export interface Section {
   id: string

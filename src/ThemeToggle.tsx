@@ -1,4 +1,4 @@
-import type { ThemeKey } from '@graphlearning/flow'
+import type { ThemeKey } from '@graphlearning/graphl-flow'
 
 const FACE: Record<ThemeKey, { glyph: string; label: string }> = {
   dark: { glyph: '☾', label: 'Dark theme' },

@@ -1,6 +1,6 @@
 {
   "name": "@graphlearning/shell",
-  "version": "0.14.0",
+  "version": "1.0.0",
   "description": "The GraphL concept-app shell — hash router, section view (scene left / slide right), slide panel, course catalog and narration channel, plus the capture/record/publish toolchain that drives them. A content repo supplies courses + scenes.",
   "license": "UNLICENSED",
   "repository": {
@@ -29,7 +29,7 @@
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
-    "@graphlearning/flow": ">=0.8.0 <3.0.0",
+    "@graphlearning/graphl-flow": "^0.1.0",
     "esbuild": ">=0.20",
     "lucide-react": "^1.28.0",
     "puppeteer": ">=24",
@@ -39,7 +39,7 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
-    "@graphlearning/flow": "^1.0.0",
+    "@graphlearning/graphl-flow": "^0.1.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^4.3.4",

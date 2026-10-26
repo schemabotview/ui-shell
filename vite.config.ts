@@ -12,7 +12,7 @@ export default defineConfig({
         'react',
         'react-dom',
         'react/jsx-runtime',
-        '@graphlearning/flow',
+        '@graphlearning/graphl-flow',
         'lucide-react',
         'react-markdown',
         'remark-gfm',

@@ -5,13 +5,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # ui-shell
 
 The concept-app shell, published as `@graphlearning/shell`. Extracted from the seven content repos
-on 2026-09-19, the same way the render engine was extracted into `ui-flow`.
+on 2026-09-19, the same way the render engine was extracted into `ui-flow`. Since 1.0.0 it renders
+with `@graphlearning/graphl-flow` (the `graphl-flow` repo) — see README, "Migrating".
 
 Read `README.md` first — it carries the integration, the three contracts and the route contract.
 
 ## What this package is, in one line
 
-`ui-flow` draws a scene. **This draws everything else**: the router, the section composition
+`graphl-flow` draws a scene. **This draws everything else**: the router, the section composition
 (scene left / slide right, or the scene alone), the slide panel, the catalog, the narration channel,
 the stylesheet.
 
@@ -37,7 +38,8 @@ finds it. 0.13.1 is the same source, built.
 copied, not bundled, so a `styles.css` edit does NOT reach a consumer until a build runs. A
 consumer on a `file:` install sees `src/` changes only through `dist/`.
 
-Port 5176 is deliberate: 5173 is a content repo, 5174 is `ui-flow`, and all three run side by side.
+Port 5176 is deliberate: 5173 is a content repo, 5175 is `graphl-flow`'s gallery (5174 the old
+`ui-flow`), and they all run side by side. graphl-flow's capture script stays off 5176 for this reason.
 
 ## Invariants
 
@@ -46,16 +48,16 @@ Port 5176 is deliberate: 5173 is a content repo, 5174 is `ui-flow`, and all thre
   (`#/<slug>`, `?capture=1`, `window.__scene.plan()`) is what every repo's recorder drives, and it
   only holds if every repo composes the pieces identically. Exporting the parts would ship a
   supported way to diverge again — which is the thing this package exists to end. Same reasoning as
-  `ui-flow` withholding `computeLayout`. `SiteHeader` is the one exception and it proves the rule:
+  the engine withholding its layout internals. `SiteHeader` is the one exception and it proves the rule:
   it has no route surface, renders on the catalog page only, and python-lab needs it without
   `ConceptApp` — there is nothing in it to compose differently.
 - **No build-time magic.** `import.meta.env` cannot be read here (see README, contract 3). Anything
   that depends on the consuming app's vite config arrives as a prop.
 - **The engine is a peer.** Never a dependency — one engine copy per app, pinned by the app. The
-  vite `external` list is load-bearing for the same reason: bundling `@graphlearning/flow` would
+  vite `external` list is load-bearing for the same reason: bundling `@graphlearning/graphl-flow` would
   put a second engine inside this package.
 - **`theme` is the DECK's declared look; the READER may override it, and capture ignores the reader.**
-  `ConceptApp` takes `theme?: 'dark' | 'light'` and forwards it to every `SceneView`. One value,
+  `ConceptApp` takes `theme?: 'dark' | 'light'` and forwards it to every `<Scene>`. One value,
   because a light scene inside dark chrome is a white rectangle on a dark page. A reader can
   override it from a toggle in TWO places, both of which are suppressed at capture: `SiteHeader` (the
   catalog page — SiteHeader never renders on a section) and the section's own footer control bar,
@@ -88,7 +90,7 @@ Port 5176 is deliberate: 5173 is a content repo, 5174 is `ui-flow`, and all thre
 - **The narration SCRUB BAR is landscape-only, and it takes the `<audio>` ELEMENT, not state.**
   `NarrationBar` sits between the two footer clusters (inside the same `!capture` footer, so a
   recording can never show it). Three things fixed its shape:
-  1. `timeupdate` fires ~4x a second. Lifting position into `ConceptApp` would re-render `SceneView`
+  1. `timeupdate` fires ~4x a second. Lifting position into `ConceptApp` would re-render `<Scene>`
      and the react-markdown slide four times a second for a 4px bar, so `useNarration` hands out the
      element and the bar subscribes to it directly. Nothing else in the shell learns that playback
      has a position.
@@ -164,7 +166,7 @@ video. Portrait needed nothing — the title already showed there — beyond hid
      `* { box-sizing: border-box }` and this stylesheet does NOT — adding one here would move the
      section view, which is burned into video.
   3. `python-lab/src/components/SiteHeader.tsx` + the `.site*` block in its `App.css` — a
-     hand-port. It cannot consume this package: the peer `@graphlearning/flow` would drag the
+     hand-port. It cannot consume this package: the peer `@graphlearning/graphl-flow` would drag the
      render engine into an app with no scenes, and this stylesheet re-declares `.idx`,
      `.idx-card`, `.idx-card__num`, `.idx-card__title`, `.idx__grid`, `.idx__head` and
      `.idx__subject` — names that repo already owns with different markup. Deliberate differences:
@@ -184,7 +186,7 @@ fallback, and `→` crossing the Alpha→Beta course boundary. Two fixture cours
 that boundary is the only way to exercise the global section stream.
 
 For a change that could move pixels, that bar is not enough: screenshot a content repo before and
-after and diff. **The capture noise floor is ~0.18% of pixels** (GPU compositing and fitView timing
+after and diff. **The capture noise floor is ~0.18% of pixels** (GPU compositing and font/fit timing
 vary run to run), so a diff only means something when compared against a same-build control run.
 
 ## Scenes and content stay in the repos
@@ -224,7 +226,7 @@ latter.
 **Loop capture (both recorders).** A section is screencast for ONE short window — `LEAD_S` of
 discarded ramp-up + `LOOP_CYCLES × PULSE_S` (one 2.4s period by default) + a guard — which is
 normalized to an exact CFR clip and repeated over the narration's length by `-stream_loop -1`,
-bounded by `-t total`. It rests on the engine: the edge pulse (`FlowEdge`,
+bounded by `-t total`. It rests on the engine: the edge pulse (graphl-flow `Edges.tsx`,
 `animateMotion dur="2.4s"`) is the only motion in a frame, so the composition is periodic with a
 2.4s period and any whole multiple of it joins back onto itself — whatever phase the recording
 started in. Hence these rules:
@@ -240,17 +242,20 @@ started in. Hence these rules:
   actually buy is dilution: a capture hiccup inside the window repeats for the whole section, so a
   section that shows one is a reason to raise `LOOP_CYCLES`, not to abandon looping.
 - **A run of identical frames is usually the SCENE, not the capture.** Counting near-zero
-  frame-to-frame differences looks like a dropped-frame detector and is not one. `FlowEdge`'s label
-  pill is opaque by design (it *interrupts* the line rather than crossing it) and renders in
-  `EdgeLabelRenderer`, above the edges — so a pulse is invisible while it crosses its path midpoint.
+  frame-to-frame differences looks like a dropped-frame detector and is not one. The engine's label
+  pill is opaque by design (it *interrupts* the line rather than crossing it) and renders as HTML
+  above the edge SVG — so a pulse is invisible while it crosses its path midpoint.
   In a scene where every edge carries a label and the pulses are in phase, all of them vanish
   together for ~0.3s in the middle of each period, and the frame genuinely does not change. Measured
   on `models/graph-shape`: 12.3% "duplicate" frames under the old full-length screencast, 9.0% under
   the looped window, and **11.7% under a deterministic frame-stepped capture that cannot stall** —
   which is what proves it is the scene. Before believing such a metric, step the SMIL clock
   (`pauseAnimations` + `setCurrentTime`) to the static window and look at the frame.
-- **`PULSE_S` duplicates a value `ui-flow` owns.** Change the engine's `dur` and every recorded video
-  gets that jump back, with a green build. Noted as an invariant in `ui-flow/CLAUDE.md` too.
+- **`PULSE_S` duplicates a value the engine owns** (`PULSE_S` in graphl-flow's `Edges.tsx`). Change
+  the engine's period and every recorded video gets that jump back, with a green build. Noted as an
+  invariant in `graphl-flow/CLAUDE.md` too.
+- **The recorders wait for `.gf-scene[data-fit="ready"]`** (fonts loaded, edges routed, label gaps
+  settled, fit applied) — the engine's own signal, not a node selector.
 
 The segment's timing is unchanged by any of this — `total` is still bell + wav + tail, still driven by
 ffprobe — so a loop-captured segment concatenates with an old one. Only the capture is shorter.

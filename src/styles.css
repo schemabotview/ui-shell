@@ -75,10 +75,6 @@ body {
   opacity: 0.7;
 }
 
-.react-flow {
-  background: var(--bg);
-}
-
 .stage--section {
   position: relative;
   overflow: hidden;
