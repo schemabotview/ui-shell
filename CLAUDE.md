@@ -55,7 +55,13 @@ Port 5176 is deliberate: 5173 is a content repo, 5175 is `graphl-flow`'s gallery
   that depends on the consuming app's vite config arrives as a prop.
 - **The engine is a peer.** Never a dependency — one engine copy per app, pinned by the app. The
   vite `external` list is load-bearing for the same reason: bundling `@graphlearning/graphl-flow` would
-  put a second engine inside this package.
+  put a second engine inside this package. The range is `>=0.2.0 <1`, ONE range, not a list of
+  carets: on 0.x a caret pins the minor, so `^0.2.0 || … || ^0.4.0` made every engine minor a shell
+  patch release that only widened the range (1.0.2, 1.0.3, 1.0.4 — and a content repo that upgraded
+  the engine first could not install at all). `>=` keeps 0.2.0 itself (python-ct pins `^0.2.0`), and
+  `<1` is the gate that matters: the engine declares a breaking layout change by going MAJOR, and
+  that is the one a shell release should have to vouch for. What proves an engine upgrade is the
+  content repo's own frame check, not this range.
 - **`theme` is the DECK's declared look; the READER may override it, and capture ignores the reader.**
   `ConceptApp` takes `theme?: 'dark' | 'light'` and forwards it to every `<Scene>`. One value,
   because a light scene inside dark chrome is a white rectangle on a dark page. A reader can
