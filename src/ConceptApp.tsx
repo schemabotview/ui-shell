@@ -90,12 +90,18 @@ export function ConceptApp({
 
   const match = sections.find(({ slug }) => slug === id)
   const audioUrl = match && `${audioBase}audio/${activeCourse!.id}/${match.section.id}.wav`
-  const { playing, toggle, stop, audio } = useNarration(audioUrl, () => {
-    const cur = idOf(location.hash)
-    const next = globalSections[globalSections.findIndex(({ slug }) => slug === cur) + 1]
-    if (next) location.hash = `#/${next.slug}`
-    else stop()
-  })
+  const { playing, toggle, stop, audio } = useNarration(
+    audioUrl,
+    () => {
+      const cur = idOf(location.hash)
+      const next = globalSections[globalSections.findIndex(({ slug }) => slug === cur) + 1]
+      if (next) location.hash = `#/${next.slug}`
+      else stop()
+    },
+    // The recorders build the section bell in ffmpeg and never capture page audio, so under
+    // capture the lead would be a live AudioContext in the window and nothing else.
+    { sting: !capture },
+  )
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

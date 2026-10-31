@@ -97,7 +97,7 @@ Interactive only — `?capture=1` suppresses nothing here because none of it fir
 | --- | --- |
 | `←` / `→` | seek the narration −10s / +10s **when the section has a clip** (exactly when the scrub bar is on screen); otherwise page to the previous/next section |
 | `Shift`+`←` / `→` | always page, clip or no clip |
-| `Space` | play/pause the narration |
+| `Space` | play/pause the narration — starting a section plays the bell first, then the clip 2.8s in |
 | `Esc` | back to the catalog (and from the catalog, up to graphl.in) |
 | `←` / `→` / `Home` / `End` | with the scrub bar focused: seek ∓10s / to the start / to the end |
 
@@ -105,6 +105,17 @@ The arrows seek rather than page because the footer's `‹` `›` buttons are th
 `Esc` still leaves — while the only thing a *listening* reader has no control for is a 10s jump.
 Where there is no clip to seek (the catalog, a bare scene view, a repo whose wavs are not generated
 yet) the old paging meaning stands, so the keyboard never goes dead.
+
+### The bell
+
+Starting a section plays a bell and holds 2.8s of silence before the narration clip — the same lead
+the recorded segment carries, so a reader hears what a viewer hears. It rings on every section,
+including the ones the auto-advance walks into, and not when resuming a clip that was paused
+part-way. Scrubbing during the lead cuts it short and starts the clip.
+
+The bell is synthesized in WebAudio (`src/sting.ts`), a port of the recorder's ffmpeg filtergraph.
+It is never in a recording: the recorders build their own bell with ffmpeg and never capture page
+audio, and `?capture=1` switches this one off outright.
 
 ## Develop
 

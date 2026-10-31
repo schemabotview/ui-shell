@@ -117,6 +117,31 @@ Port 5176 is deliberate: 5173 is a content repo, 5175 is `graphl-flow`'s gallery
   track; the volume toggle already carries that state — and that same duration gate now decides what
   the window-level arrows mean (next invariant). The track's own arrows stop propagation so the
   window handler does not step the SAME clip a second time; Esc and Space are left to bubble.
+- **The reader's bell is a SECOND implementation of the recorder's, and it must never become the
+  recording's.** Starting a section rings a bell and holds `STING_MS` (2.8s) before the clip, so a
+  reader hears the lead a viewer hears. Four things make that safe:
+  1. **`sting: !capture`.** The recorders build the bell in ffmpeg (`prepareBell` → `concatAudio`)
+     and map audio from that wav (`-map 1:a:0`); `page.screencast` carries video only and
+     `makeLoopClip` passes `-an`. So page audio cannot reach a segment — but under `?capture=1`
+     the lead is switched off anyway, so a capture window holds no live AudioContext and there is
+     nothing to reason about. Do not "simplify" that gate away on the grounds that it is redundant;
+     it is the thing that makes the no-double-bell claim hold without reading ffmpeg flags.
+  2. **The bell is WebAudio, never an `<audio>` element.** `ended` on the narration element IS the
+     auto-advance (`ConceptApp`'s `onEnded` sets `location.hash`). A bell that was an element — or
+     the same element with the bell as its src — would page the app forward on its own, and under
+     capture that lands the NEXT scene inside this section's screencast window with a green exit
+     and a valid sidecar. Only the clip reaching its end may navigate.
+  3. **No DOM, no per-frame state.** Oscillators and one `setTimeout`; nothing renders, nothing
+     re-renders, `<Scene>`'s keyed fit and `data-fit="ready"` are untouched. Same reason the scrub
+     bar takes the element rather than lifting position into `ConceptApp`.
+  4. **`STING_MS` and the three tones duplicate values `record-course.mjs` owns** (same trap class
+     as `PULSE_S` duplicating the engine's period — and here the two live in different languages,
+     so nothing but these notes couples them). Change the recorder's `STING_MS` default or its
+     filtergraph and the app and the video disagree about the lead, with a green build. `NO_STING=1`
+     is not the way to retire the recorder's bell either: `sting` is in the segment fingerprint, so
+     it re-records every segment of every course.
+  A clip that 404s (a repo with no narration yet) cancels the bell on the element's `error` rather
+  than ringing out over silence, and a scrub during the lead cuts it short and starts the clip.
 - **← / → belong to the NARRATION, not the pager — when there is a clip.** A section with a loaded
   clip seeks ∓10s; everything else (the catalog, a bare scene view, a section whose wav 404s, a repo
   with no narration yet) still pages, and `Shift`+arrow always pages. The gate is the clip's
@@ -190,6 +215,20 @@ No test runner, same as the rest of the workspace: `npm run build` clean **and**
 (`npm run dev`, :5176) visually correct — the diagram scene, the code scene, the missing-scene
 fallback, and `→` crossing the Alpha→Beta course boundary. Two fixture courses, not one, because
 that boundary is the only way to exercise the global section stream.
+
+**The harness has no narration wavs in git** — `public/` is ignored. To exercise the channel (the
+bell, the 2.8s lead, the auto-advance) generate throwaway clips for the fixture's six sections:
+
+```bash
+for s in alpha/diagram alpha/code alpha/missing beta/rollover beta/full beta/end; do
+  mkdir -p "public/audio/${s%/*}"
+  ffmpeg -y -v error -f lavfi -i "sine=f=220:d=5:sample_rate=44100" -ac 1 "public/audio/$s.wav"
+done
+```
+
+Timing is worth measuring rather than eyeballing: drive the harness with puppeteer, wrap
+`HTMLMediaElement.prototype.play` and `AudioContext.createOscillator`, and assert the clip starts
+~2800ms after the bell and that `?capture=1` creates no oscillator at all.
 
 For a change that could move pixels, that bar is not enough: screenshot a content repo before and
 after and diff. **The capture noise floor is ~0.18% of pixels** (GPU compositing and font/fit timing

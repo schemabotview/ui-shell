@@ -13,6 +13,10 @@ const CW = process.env.WIDTH ? +process.env.WIDTH : 3840
 const CH = process.env.HEIGHT ? +process.env.HEIGHT : 2160
 const FPS = process.env.FPS ? +process.env.FPS : 30
 const TAIL_MS = process.env.TAIL_MS ? +process.env.TAIL_MS : 500
+// The section bell. The shell plays a reader-side copy of it (src/sting.ts, WebAudio) with these
+// same numbers — the default here and the constants there must agree or the interactive app and the
+// video disagree about how long the lead is. Page audio is never captured, so this stays the only
+// bell in a segment whatever the browser is doing.
 const STING_MS = process.env.NO_STING ? 0 : process.env.STING_MS ? +process.env.STING_MS : 2800
 const STING_SIG = STING_MS > 0 ? `bell-arp:v1:${STING_MS}` : 'none'
 

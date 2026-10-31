@@ -1,2 +1,5 @@
 node_modules
 dist
+
+# Fixture narration for the harness — generate with the ffmpeg loop in CLAUDE.md
+public
