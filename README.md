@@ -1,6 +1,7 @@
 # @graphlearning/shell
 
 The GraphL concept-app shell: everything a content repo renders *around* its content.
+Maintainer rules: `CLAUDE.md`; their history: `docs/DECISIONS.md`; workspace pipeline: `../CLAUDE.md`.
 
 A content repo authors two things — **courses** (sections: scene + narration) and **scenes**
 (diagrams / code cards, drawn by [`@graphlearning/graphl-flow`](../graphl-flow)). Everything else —
@@ -51,7 +52,7 @@ import { SiteHeader } from '@graphlearning/shell'
 
 The bar exists **three times** by necessity — `ui-graphl` (buildless vanilla), this package, and
 `python-lab` (which hand-ports it rather than take this package as a dependency; see the invariant
-in CLAUDE.md). One design, three implementations — **when you change one, change all three**, or
+in CLAUDE.md and docs/DECISIONS.md, D17). One design, three implementations — **when you change one, change all three**, or
 they drift and the seam shows on every crossing.
 
 ## The three contracts
@@ -167,6 +168,10 @@ They are `bin` entries, wired through each repo's `npm run`:
 | `npm run thumb` | a branded YouTube thumbnail |
 | `npm run gen:desc` | video descriptions + chapters |
 | `npm run gen:audio` | the narration manifest |
+| — (`graphl-capture-shots`) | a stub that exits 1; use `shots:4k` |
+
+Not bins: `check`, `check:spine`, `shots`, `film` and `thumb:film` are each repo's own scripts
+(the workspace `../CLAUDE.md` lists them).
 
 `record:all` is the only one whose repo script is not just the bin: it needs a sleep wrapper, because
 a full concept is a multi-hour batch and the machine going idle mid-run kills it.
